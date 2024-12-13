@@ -1,0 +1,9 @@
+django
+djangorestframework
+langchain
+langchain-ollama
+langchain-openai
+django-cors-headers
+mysqlclient
+redis
+django-redis
