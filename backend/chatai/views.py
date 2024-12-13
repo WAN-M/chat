@@ -1,5 +1,4 @@
 import logging
-LOGGER = logging.getLogger(__name__)
 
 from typing import Any
 from rest_framework.views import APIView
@@ -8,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .chat_models import OllamaModel
+
+LOGGER = logging.getLogger(__name__)
 
 # Create your views here.
 class ChatView(APIView):
@@ -31,5 +32,5 @@ class ChatView(APIView):
     
 class DebugView(APIView):
     def get(self, request):
-        LOGGER.info('Successfully Get Response!')
+        LOGGER.info('Successfully Get Request!')
         return Response(status=status.HTTP_200_OK)
