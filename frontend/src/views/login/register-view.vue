@@ -18,7 +18,7 @@ import router from '@/router'
 import background from '@/assets/background.jpg'
 import { request } from '@/utils/request'
 import { assertFormValidate } from '@/utils/common'
-
+console.log('enter register view')
 const registerForm = reactive({
   email: '',
   nickname: '',
@@ -41,7 +41,7 @@ const rules = reactive<FormRules<typeof registerForm>>({
 // 发送验证码请求
 const sendVerifyCode = async () => {
   try {
-    await request.post('/send_code/', { email: registerForm.email })
+    await request.post('/user/send_code/', { email: registerForm.email })
     ElMessage.success('验证码发送成功')
   } catch (error) {
     ElMessage.error('验证码发送失败')
@@ -53,7 +53,7 @@ const handleRegister = async () => {
   if (!ruleFormRef.value) return
   await ruleFormRef.value.validate(
     assertFormValidate(() =>
-      request.post('/register/', registerForm).then((res) => {
+      request.post('/user/register/', registerForm).then((res) => {
         router.replace({ path: '/' })
         // localStorage.setItem('token', res.tokenValue)
       })
