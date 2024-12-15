@@ -1,15 +1,18 @@
 import logging
 import random
 import string
+from datetime import timedelta
 
 from django.conf import settings
-from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
+from django.utils import timezone
 from django_redis import get_redis_connection
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 
@@ -18,6 +21,8 @@ LOGGER = logging.getLogger(__name__)
 redis_connection = get_redis_connection("default")
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request: Request):
         nickname = request.data.get('nickname')
         email = request.data.get('email')
@@ -29,10 +34,10 @@ class RegisterView(APIView):
         # 从 Redis 获取验证码
         redis_code = redis_connection.get(email)
         if not redis_code:
-            return Response({'error': 'Verification code has expired.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': '验证码过期，请重新发送'}, status=status.HTTP_400_BAD_REQUEST)
 
         if verifyCode != redis_code.decode():
-            return Response({'error': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': '验证码错误'}, status=status.HTTP_400_BAD_REQUEST)
         
         # 删除验证码
         redis_connection.delete(email)  
@@ -41,11 +46,13 @@ class RegisterView(APIView):
         user = User.objects.create(
             nickname=nickname,
             email=email,
-            password=make_password(password)
+            password=password
         )
         return Response(status=status.HTTP_200_OK)
 
 class EmailView(APIView):
+    permission_classes = [AllowAny]
+
     def _generate_verification_code(self, length=6):
         characters = string.ascii_letters + string.digits
         return ''.join(random.choice(characters) for i in range(length))
@@ -70,3 +77,26 @@ class EmailView(APIView):
         # 发送验证码到用户邮箱
         self._send_verification_email(email, code)
         return Response(status=status.HTTP_200_OK)
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email', None)
+        password = request.data.get('password', None)
+
+        if not email or not password:
+            return Response({'message': '未提供完整信息'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email, password=password)
+        except User.DoesNotExist:
+            return Response({'message': '邮箱或密码错误'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        refresh = RefreshToken.for_user(user)
+        token = refresh.access_token
+        token.set_exp(lifetime=timedelta(minutes=30))
+
+        response = Response({'token': str(token)}, status=status.HTTP_200_OK)
+        response.set_cookie('token', token, httponly=True, expires=timezone.now() + timedelta(minutes=30))
+        return response

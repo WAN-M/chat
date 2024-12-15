@@ -7,6 +7,7 @@ import {
   ElForm,
   ElFormItem,
   ElInput,
+  ElMessage,
   ElRow,
   type FormInstance,
   type FormRules
@@ -43,10 +44,11 @@ onMounted(() => {
 const handleLogin = async () => {
   try {
     const res = await request.post('/user/login/', loginForm)
-    localStorage.setItem('token', res.data.tokenValue)
-    await router.replace({ path: '/' })
+    ElMessage.success('登录成功')
+    await router.replace({ path: '/chat' })
   } catch (error) {
-    console.error('登录失败:', error)
+    ElMessage.error('登录失败')
+    console.error(error)
   }
 }
 </script>
@@ -65,8 +67,7 @@ const handleLogin = async () => {
                 <div class="description">构建你的AI助手</div>
               </div>
               <div class="panel-right">
-                <div class="title">快速开始</div>
-                <div class="description">登录你的账号</div>
+                <div class="title">登录账号</div>
                 <el-form
                   ref="ruleFormRef"
                   :model="loginForm"
