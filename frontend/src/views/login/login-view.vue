@@ -15,30 +15,42 @@ import { onMounted, reactive, ref, Transition } from 'vue'
 import logo from '@/assets/logo.jpg'
 import router from '@/router'
 import background from '@/assets/background.jpg'
-import { api } from '@/utils/api-instance'
-import type { UserLoginInput } from '@/apis/__generated/model/static'
+import { request } from '@/utils/request'
 
-const loginForm = reactive<UserLoginInput>({ phone: '', password: '' })
+// 登录表单
+const loginForm = reactive({
+  email: '',
+  password: ''
+})
 const ruleFormRef = ref<FormInstance>()
 const rules = reactive<FormRules<typeof loginForm>>({
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { max: 16, min: 6, message: '密码长度介于6，16' }
+    { max: 16, min: 6, message: '密码长度介于6，16个字符' }
   ]
 })
+
+// 控制面板显示
 const showPanel = ref(false)
 onMounted(() => {
   setTimeout(() => {
     showPanel.value = true
   }, 1000)
 })
+
+// 登录请求处理
 const handleLogin = async () => {
-  const res = await api.userController.login({ body: loginForm })
-  localStorage.setItem('token', res.tokenValue)
-  await router.replace({ path: '/' })
+  try {
+    const res = await request.post('/user/login/', loginForm)
+    localStorage.setItem('token', res.data.tokenValue)
+    await router.replace({ path: '/' })
+  } catch (error) {
+    console.error('登录失败:', error)
+  }
 }
 </script>
+
 <template>
   <div>
     <img alt="背景图片" class="background" :src="background" />
@@ -63,15 +75,15 @@ const handleLogin = async () => {
                   label-position="top"
                   label-width="100px"
                 >
-                  <el-form-item label="手机号">
-                    <el-input v-model="loginForm.phone"></el-input>
+                  <el-form-item label="邮箱" prop="email">  <!-- 改为邮箱 -->
+                    <el-input v-model="loginForm.email"></el-input>
                   </el-form-item>
-                  <el-form-item label="密码">
+                  <el-form-item label="密码" prop="password">
                     <el-input v-model="loginForm.password" type="password"></el-input>
                   </el-form-item>
                 </el-form>
                 <div class="button-wrapper">
-                  <el-button class="login" type="primary" @click="handleLogin"> 登录</el-button>
+                  <el-button class="login" type="primary" @click="handleLogin"> 登录 </el-button>
                   <el-button
                     class="register"
                     type="info"
@@ -90,6 +102,7 @@ const handleLogin = async () => {
     </el-row>
   </div>
 </template>
+
 <style lang="scss" scoped>
 .background {
   position: fixed;

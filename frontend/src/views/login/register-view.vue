@@ -54,8 +54,8 @@ const handleRegister = async () => {
   await ruleFormRef.value.validate(
     assertFormValidate(() =>
       request.post('/user/register/', registerForm).then((res) => {
-        router.replace({ path: '/' })
-        // localStorage.setItem('token', res.tokenValue)
+        ElMessage.success('注册成功！')
+        router.replace({ path: '/login' })
       })
     )
   )
