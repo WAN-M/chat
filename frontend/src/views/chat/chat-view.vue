@@ -57,8 +57,17 @@ const handleSendMessage = async (message: { text: string }) => {
   evtSource.addEventListener('message', async (event: any) => {
     const response = JSON.parse(event.data)
     if (response.result?.output?.content) {
-      // 更新 LLM 消息内容
-      assistantMessage.textContent += response.result.output.content
+      // 找到要更新的消息
+      const assistantMessageIndex = messages.value.findIndex(
+        msg => msg.id === loadingMessageId.value
+      )
+      if (assistantMessageIndex !== -1) {
+        // 更新 LLM 消息内容
+        messages.value[assistantMessageIndex + 1].textContent += response.result.output.content
+
+        // 强制 Vue 响应更新
+        messages.value = [...messages.value]
+      }
 
       // 滚动到底部
       await nextTick(() => {
@@ -100,10 +109,10 @@ const handleSendMessage = async (message: { text: string }) => {
           >
             <!-- 用户头像和消息内容 -->
             <div v-if="message.type === 'USER'" class="user-chat">
+              <img class="avatar" :src="userAva" alt="User Avatar" />
               <div class="message-content">
                 {{ message.textContent }}
               </div>
-              <img class="avatar" :src="userAva" alt="User Avatar" />
             </div>
 
             <!-- LLM头像和消息内容 -->
@@ -202,7 +211,9 @@ const handleSendMessage = async (message: { text: string }) => {
         color: #333;
         position: relative;
       }
-
+      .user-chat {
+        margin-right: 10px;
+      }
       .user-chat .message-content {
         background-color: #007bff;
         color: white;
@@ -217,8 +228,8 @@ const handleSendMessage = async (message: { text: string }) => {
 
       .loading-dot {
         position: absolute;
-        right: 10px;
-        bottom: 5px;
+        right: -20px; // 向右移动至消息框外
+        bottom: -10px; // 向下移动到消息框外
         font-size: 20px;
         color: #007bff;
       }
