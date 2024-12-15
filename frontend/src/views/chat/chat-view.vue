@@ -38,7 +38,6 @@ const handleSendMessage = async (message: { text: string }) => {
   })
 
   evtSource.addEventListener('message', async (event: any) => {
-    console.log(event)
     const response = JSON.parse(event.data)
     if (response.result?.output?.content) {
       responseMessage.value.textContent += response.result.output.content

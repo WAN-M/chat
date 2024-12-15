@@ -19,7 +19,7 @@ class ChatView(APIView):
 
     def _event_stream(self, message):
         finished = False
-        
+        # TODO 完善结束逻辑
         for token in self._model.chat_stream(message):
             result_data = {
                 'result': {

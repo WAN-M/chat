@@ -18,7 +18,7 @@ import router from '@/router'
 import background from '@/assets/background.jpg'
 import { request } from '@/utils/request'
 import { assertFormValidate } from '@/utils/common'
-console.log('enter register view')
+
 const registerForm = reactive({
   email: '',
   nickname: '',
@@ -76,8 +76,7 @@ const handleRegister = async () => {
                 <div class="description">构建你的AI助手</div>
               </div>
               <div class="panel-right">
-                <div class="title">快速开始</div>
-                <div class="description">创建你的账号</div>
+                <div class="title">注册账号</div>
                 <el-form
                   ref="ruleFormRef"
                   :model="registerForm"

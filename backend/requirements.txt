@@ -7,3 +7,4 @@ django-cors-headers
 mysqlclient
 redis
 django-redis
+djangorestframework-simplejwt
