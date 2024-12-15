@@ -6,7 +6,7 @@ defineProps<{ message: string }>()
 
 <template>
   <!--  markdown显示消息-->
-  <md-preview id="preview-only" :model-value="message" preview-theme="smart-blue"></md-preview>
+  <md-preview id="preview-only" :model-value="message" theme="light"></md-preview>
 </template>
 
 <style scoped lang="scss">
