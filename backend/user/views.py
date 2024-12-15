@@ -88,9 +88,14 @@ class LoginView(APIView):
         if not email or not password:
             return Response({'message': '未提供完整信息', 'code': 400}, status=status.HTTP_400_BAD_REQUEST)
         
+        LOGGER.info(f'{email} Login')
+        
         try:
-            user = User.objects.get(email=email, password=password)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
+            return Response({'message': '邮箱未注册', 'code': 401}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        if not user.check_password(password):
             return Response({'message': '邮箱或密码错误', 'code': 401}, status=status.HTTP_401_UNAUTHORIZED)
         
         refresh = RefreshToken.for_user(user)
