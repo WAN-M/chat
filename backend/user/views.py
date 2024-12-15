@@ -19,17 +19,19 @@ redis_connection = get_redis_connection("default")
 
 class RegisterView(APIView):
     def post(self, request: Request):
-        nickname = request.POST.get('nickname')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        verification_code = request.POST.get('verification_code')
+        nickname = request.data.get('nickname')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        verifyCode = request.data.get('verifyCode')
+
+        LOGGER.info(f'Register Request From {email}, VerifyCode is {verifyCode}')
 
         # 从 Redis 获取验证码
         redis_code = redis_connection.get(email)
         if not redis_code:
             return Response({'error': 'Verification code has expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if verification_code != redis_code.decode():
+        if verifyCode != redis_code.decode():
             return Response({'error': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # 删除验证码
