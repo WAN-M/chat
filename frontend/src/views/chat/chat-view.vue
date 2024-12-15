@@ -2,8 +2,8 @@
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { SSE } from 'sse.js'
-import botAva from '@/assets/bot.png'
-import userAva from '@/assets/user.png'
+import MessageRow from './components/message-row.vue'
+import MessageInput from './components/message-input.vue'
 
 const API_PREFIX = import.meta.env.VITE_API_PREFIX
 
@@ -58,13 +58,13 @@ const handleSendMessage = async (message: { text: string }) => {
     const response = JSON.parse(event.data)
     if (response.result?.output?.content) {
       // 找到要更新的消息
+      // assistantMessage.textContent += response.result.output.content
       const assistantMessageIndex = messages.value.findIndex(
         msg => msg.id === loadingMessageId.value
       )
       if (assistantMessageIndex !== -1) {
         // 更新 LLM 消息内容
         messages.value[assistantMessageIndex + 1].textContent += response.result.output.content
-
         // 强制 Vue 响应更新
         messages.value = [...messages.value]
       }
@@ -98,43 +98,17 @@ const handleSendMessage = async (message: { text: string }) => {
       <!-- 右侧的消息记录 -->
       <div class="message-panel">
         <div ref="messageListRef" class="message-list">
-          <!-- 遍历并显示每条消息 -->
-          <div
-            v-for="(message, index) in messages"
-            :key="index"
-            :class="[
-              'message',
-              message.type === 'USER' ? 'user-message' : 'assistant-message'
-            ]"
-          >
-            <!-- 用户头像和消息内容 -->
-            <div v-if="message.type === 'USER'" class="user-chat">
-              <img class="avatar" :src="userAva" alt="User Avatar" />
-              <div class="message-content">
-                {{ message.textContent }}
-              </div>
-            </div>
-
-            <!-- LLM头像和消息内容 -->
-            <div v-else class="assistant-chat">
-              <img class="avatar" :src="botAva" alt="Assistant Avatar" />
-              <div class="message-content">
-                {{ message.textContent }}
-                <!-- 右下角显示加载动画 -->
-                <span v-if="loadingMessageId === message.id" class="loading-dot">...</span>
-              </div>
-            </div>
-          </div>
+          <!-- 过渡效果 -->
+          <transition-group name="list">
+            <message-row
+              v-for="message in messages"
+              :key="message.id"
+              :message="message"
+            ></message-row>
+          </transition-group>
         </div>
-
         <!-- 输入框 -->
-        <div class="message-input">
-          <el-input
-            v-model="inputText"
-            placeholder="请输入您的问题"
-            @keydown.enter="handleSendMessage({ text: inputText })"
-          />
-        </div>
+        <message-input @send="handleSendMessage"></message-input>
       </div>
     </div>
   </div>
@@ -167,71 +141,6 @@ const handleSendMessage = async (message: { text: string }) => {
         width: 100%;
         flex: 1;
         overflow-y: scroll;
-      }
-
-      .message-input {
-        padding: 20px;
-      }
-
-      .message {
-        display: flex;
-        align-items: flex-start;
-        margin: 10px 0;
-
-        &.user-message {
-          justify-content: flex-end;
-          .user-chat {
-            display: flex;
-            flex-direction: row-reverse; /* 头像在右边 */
-            align-items: center;
-          }
-        }
-
-        &.assistant-message {
-          justify-content: flex-start;
-          .assistant-chat {
-            display: flex;
-            align-items: center;
-          }
-        }
-      }
-
-      .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin: 0 10px;
-      }
-
-      .message-content {
-        max-width: 70%;
-        padding: 10px 15px;
-        background-color: #f1f1f1;
-        border-radius: 10px;
-        color: #333;
-        position: relative;
-      }
-      .user-chat {
-        margin-right: 10px;
-      }
-      .user-chat .message-content {
-        background-color: #007bff;
-        color: white;
-        border-bottom-right-radius: 0;
-      }
-
-      .assistant-chat .message-content {
-        background-color: #e5e5e5;
-        color: black;
-        border-bottom-left-radius: 0;
-      }
-
-      .loading-dot {
-        position: absolute;
-        right: -20px; // 向右移动至消息框外
-        bottom: -10px; // 向下移动到消息框外
-        font-size: 20px;
-        color: #007bff;
       }
     }
   }
