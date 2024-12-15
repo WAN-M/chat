@@ -23,6 +23,7 @@
     "md-editor-v3": "^4.13.2",
     "pinia": "^2.1.7",
     "sse.js": "^2.4.1",
+    "vite-plugin-html": "^3.2.2",
     "vue": "^3.4.21",
     "vue-router": "^4.5.0"
   },

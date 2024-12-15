@@ -34,10 +34,10 @@ class RegisterView(APIView):
         # 从 Redis 获取验证码
         redis_code = redis_connection.get(email)
         if not redis_code:
-            return Response({'message': '验证码过期，请重新发送'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': '验证码过期，请重新发送', 'code': '400'}, status=status.HTTP_400_BAD_REQUEST)
 
         if verifyCode != redis_code.decode():
-            return Response({'message': '验证码错误'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': '验证码错误', 'code': 400}, status=status.HTTP_400_BAD_REQUEST)
         
         # 删除验证码
         redis_connection.delete(email)  
@@ -67,7 +67,7 @@ class EmailView(APIView):
         email = request.data.get('email', None)
 
         if not email:
-            return Response({'message': 'please enter a valid email'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': '请输入有效邮箱', 'code': 400}, status=status.HTTP_400_BAD_REQUEST)
 
         # 生成并存储验证码
         code = self._generate_verification_code()
@@ -76,7 +76,7 @@ class EmailView(APIView):
 
         # 发送验证码到用户邮箱
         self._send_verification_email(email, code)
-        return Response(status=status.HTTP_200_OK)
+        return Response({'code': 200}, status=status.HTTP_200_OK)
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -86,17 +86,22 @@ class LoginView(APIView):
         password = request.data.get('password', None)
 
         if not email or not password:
-            return Response({'message': '未提供完整信息'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': '未提供完整信息', 'code': 400}, status=status.HTTP_400_BAD_REQUEST)
+        
+        LOGGER.info(f'{email} Login')
         
         try:
-            user = User.objects.get(email=email, password=password)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({'message': '邮箱或密码错误'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': '邮箱未注册', 'code': 401}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        if not user.check_password(password):
+            return Response({'message': '邮箱或密码错误', 'code': 401}, status=status.HTTP_401_UNAUTHORIZED)
         
         refresh = RefreshToken.for_user(user)
         token = refresh.access_token
         token.set_exp(lifetime=timedelta(minutes=30))
 
-        response = Response({'token': str(token)}, status=status.HTTP_200_OK)
+        response = Response({'token': str(token), 'code': 200}, status=status.HTTP_200_OK)
         response.set_cookie('token', token, httponly=True, expires=timezone.now() + timedelta(minutes=30))
         return response
