@@ -45,26 +45,12 @@ class ChatView(APIView):
 
     def post(self, request: Request):
         message = request.data.get('message', None)
-        if message:
-            LOGGER.info(f"Receive Message: {message}")
-            return StreamingHttpResponse(self._event_stream(message), content_type='text/event-stream')
-            try:
-                reply = self._model.chat_response(message)
-            except Exception as e:
-                LOGGER.error(str(e))
-                return Response({"error": "exception happened"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            LOGGER.info(f'Reply: {reply}')
-            return Response({
-                "result": {
-                    "output": {
-                        "content": reply
-                    },
-                    "metadata": {
-                        "finishReason": "stop"
-                    }
-                }
-            }, status=status.HTTP_200_OK, content_type='text/event-stream')
-        return Response({"error": "No message provided"}, status=status.HTTP_400_BAD_REQUEST)
+        if not message:
+            return Response({"message": "No message provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        LOGGER.info(f"Receive Message: {message}")
+        user = request.user
+        return StreamingHttpResponse(self._event_stream(message), content_type='text/event-stream')
     
 class DebugView(APIView):
     def get(self, request):
