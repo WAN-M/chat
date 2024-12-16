@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -108,7 +109,7 @@ class LoginView(APIView):
         response.set_cookie('token', token, httponly=True, expires=timezone.now() + timedelta(minutes=30))
         return response
 
-class SessionView(DestroyModelMixin, ListModelMixin):
+class SessionView(DestroyModelMixin, ListModelMixin, GenericViewSet):
     def list(self, request, *args, **kwargs):
         """
         List all visible sessions for user.
@@ -132,7 +133,7 @@ class SessionView(DestroyModelMixin, ListModelMixin):
         """
         Instead of deleting the session, mark it as not visible.
         """
-        session_id = request.data.get('session_id')
+        session_id = kwargs.get('session_id')
         user = request.user
 
         try:
@@ -143,7 +144,7 @@ class SessionView(DestroyModelMixin, ListModelMixin):
         except Session.DoesNotExist:
             return Response({"message": "会话不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-class MessageView(CreateModelMixin, ListModelMixin):
+class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
     """
     API to create a new message in a specific session.
     """
