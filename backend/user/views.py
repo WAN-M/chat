@@ -127,10 +127,10 @@ class SessionView(CreateModelMixin,
         Update session name
         """
         user = request.user
-        session_id = request.data.get('session_id', None)
+        session_id = kwargs.get('session_id')
         session_name = request.data.get('session_name', None)
 
-        if not session_name or not session_id:
+        if not session_name:
             return Response({"message": "参数错误"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:

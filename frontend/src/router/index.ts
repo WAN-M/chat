@@ -25,13 +25,6 @@ const router = createRouter({
       name: 'register',
       component: RegisterView
     },
-    // {
-    //   path: '/analyze',
-    //   component: AnalyzeResultView,
-    //   props(to) {
-    //     return { path: to.query.path }
-    //   }
-    // }
   ]
 })
 

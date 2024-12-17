@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ref, nextTick, onMounted } from 'vue'
-import { ElMessage, ElDialog, ElButton, ElDropdown, ElDropdownMenu, ElDropdownItem } from 'element-plus'
+import { ref, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
 import { SSE } from 'sse.js'
 import { request } from '@/utils/request'
 import MessageRow from './components/message-row.vue'
@@ -10,8 +10,7 @@ import SessionList from './components/session-list.vue'
 const API_PREFIX = import.meta.env.VITE_API_PREFIX
 
 const messageListRef = ref<InstanceType<typeof HTMLDivElement>>()
-const loadingMessageId = ref<string | null>(null) // 用于标记当前 LLM 回复的消息ID
-const sessionList = ref<Array<{ id: number; session_name: string }>>([]) // 存储所有session
+const loadingMessageId = ref<string | null>(null) // 标记当前 LLM 回复的消息ID
 let selectedSessionId:number = -1 // 默认为 -1 表示需要新建会话
 
 // 用户输入的文本
@@ -129,7 +128,6 @@ const handleSendMessage = async (message: { text: string }) => {
     </div>
 
     <div class="chat-panel">
-      <!-- 右侧的消息记录 -->
       <div class="message-panel">
         <div ref="messageListRef" class="message-list">
           <transition-group name="list">
@@ -140,7 +138,6 @@ const handleSendMessage = async (message: { text: string }) => {
             ></message-row>
           </transition-group>
         </div>
-        <!-- 输入框 -->
         <message-input @send="handleSendMessage"></message-input>
       </div>
     </div>

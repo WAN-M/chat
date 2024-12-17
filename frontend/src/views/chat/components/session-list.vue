@@ -5,6 +5,16 @@ import { request } from '@/utils/request'
 
 const sessionList = ref<Array<{ id: number; session_name: string }>>([]) // 存储所有session
 
+const emit = defineEmits<{
+  (e: 'sessionSelected', sessionId: number): void
+}>()
+
+// 选择一个会话
+const selectSession = (sessionId: number) => {
+  // 触发父组件的事件，传递选中的 sessionId
+  emit('sessionSelected', sessionId)
+}
+
 // 获取所有Session数据
 const fetchSessions = async () => {
   try {
@@ -19,7 +29,7 @@ const fetchSessions = async () => {
 const createSession = async () => {
   try {
     await request.post('/user/session/')
-    fetchSessions() // 刷新会话列表
+    fetchSessions()
   } catch (error) {
     ElMessage.error('创建对话失败')
   }
@@ -31,7 +41,7 @@ const handleEdit = async (sessionId: number) => {
     const newSessionName = prompt('请输入新的对话名称:')
     if (newSessionName) {
       await request.put(`/user/session/${sessionId}/`, { session_name: newSessionName })
-      fetchSessions() // 更新列表
+      fetchSessions()
     }
   } catch (error) {
     ElMessage.error('修改失败')
@@ -62,18 +72,21 @@ onMounted(fetchSessions)
         v-for="session in sessionList"
         :key="session.id"
         class="session-item"
+        @click="selectSession(session.id)"
       >
         <span>{{ session.session_name }}</span>
   
         <!-- 设置按钮 -->
-        <el-dropdown trigger="click">
-          <el-button class="el-dropdown-link" size="small">
-            <i class="el-icon-more"></i>
-          </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item @click="handleEdit(session.id)">修改对话名称</el-dropdown-item>
-            <el-dropdown-item @click="handleDelete(session.id)">删除对话</el-dropdown-item>
-          </el-dropdown-menu>
+        <el-dropdown>
+            <span class="el-dropdown-link">
+                <el-icon><MoreFilled /></el-icon>
+            </span>
+            <template #dropdown>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item @click="handleEdit(session.id)">修改对话名称</el-dropdown-item>
+              <el-dropdown-item @click="handleDelete(session.id)">删除对话</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
         </el-dropdown>
       </div>
     </div>
@@ -111,6 +124,7 @@ onMounted(fetchSessions)
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  outline: none;
 }
 
 .el-dropdown-menu__item {
