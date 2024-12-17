@@ -8,3 +8,4 @@ mysqlclient
 redis
 django-redis
 djangorestframework-simplejwt
+drf-yasg

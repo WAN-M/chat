@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .chat_models import OllamaModel
+from user.models import Message, Session
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,26 +46,14 @@ class ChatView(APIView):
 
     def post(self, request: Request):
         message = request.data.get('message', None)
-        if message:
-            LOGGER.info(f"Receive Message: {message}")
-            return StreamingHttpResponse(self._event_stream(message), content_type='text/event-stream')
-            try:
-                reply = self._model.chat_response(message)
-            except Exception as e:
-                LOGGER.error(str(e))
-                return Response({"error": "exception happened"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            LOGGER.info(f'Reply: {reply}')
-            return Response({
-                "result": {
-                    "output": {
-                        "content": reply
-                    },
-                    "metadata": {
-                        "finishReason": "stop"
-                    }
-                }
-            }, status=status.HTTP_200_OK, content_type='text/event-stream')
-        return Response({"error": "No message provided"}, status=status.HTTP_400_BAD_REQUEST)
+        session_id = request.data.get('session_id', None)
+        if not message or not session_id:
+            return Response({"message": "参数错误"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        LOGGER.info(f"Receive Session {session_id}\nMessage: {message}")
+        session = Session.objects.get(id=session_id)
+        Message.objects.create(session=session, role='user', content=message)
+        return StreamingHttpResponse(self._event_stream(message), content_type='text/event-stream')
     
 class DebugView(APIView):
     def get(self, request):

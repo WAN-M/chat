@@ -13,5 +13,4 @@ class OllamaModel(BaseModel):
     def chat_stream(self, message: str):
         res = self._llm.stream(message)
         for token in res:
-            print(token)
             yield token
