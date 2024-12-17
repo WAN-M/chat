@@ -8,31 +8,31 @@ import { defineProps } from 'vue'
 const props = defineProps<{
   message: {
     id: string;
-    textContent: string;
-    type: 'USER' | 'ASSISTANT';
+    content: string;
+    role: 'user' | 'model';
   };
   avatar?: string;
 }>()
 </script>
 
 <template>
-  <div :class="['message-row', message.type === 'USER' ? 'right' : 'left']">
+  <div :class="['message-row', message.role === 'user' ? 'right' : 'left']">
     <div class="row">
-      <template v-if="message.type === 'ASSISTANT'">
+      <template v-if="message.role === 'model'">
         <el-avatar :src="botAva" class="avatar" shape="square" />
         <div class="message">
           <markdown-message
-            :type="message.type"
-            :message="message.textContent"
-            v-if="message.textContent"
+            :type="message.role"
+            :message="message.content"
+            v-if="message.content"
           ></markdown-message>
-          <TextLoading v-if="!message.textContent"></TextLoading>
+          <TextLoading v-if="!message.content"></TextLoading>
         </div>
       </template>
 
       <template v-else>
         <div class="message">
-          {{message.textContent}}
+          {{message.content}}
         </div>
         <el-avatar :src="avatar || userAva" class="avatar" shape="square" />
       </template>

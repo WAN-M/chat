@@ -22,7 +22,6 @@ class CookieJWTAuthentication(JWTAuthentication):
 
     def authenticate(self, request):
         token = request.COOKIES.get('token')
-        LOGGER.info(token)
         if not token:
             return None
 

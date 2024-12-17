@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .chat_models import OllamaModel
+from user.models import Message, Session
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +46,13 @@ class ChatView(APIView):
 
     def post(self, request: Request):
         message = request.data.get('message', None)
-        if not message:
-            return Response({"message": "No message provided"}, status=status.HTTP_400_BAD_REQUEST)
+        session_id = request.data.get('session_id', None)
+        if not message or not session_id:
+            return Response({"message": "参数错误"}, status=status.HTTP_400_BAD_REQUEST)
         
-        LOGGER.info(f"Receive Message: {message}")
-        user = request.user
+        LOGGER.info(f"Receive Session {session_id}\nMessage: {message}")
+        session = Session.objects.get(id=session_id)
+        Message.objects.create(session=session, role='user', content=message)
         return StreamingHttpResponse(self._event_stream(message), content_type='text/event-stream')
     
 class DebugView(APIView):

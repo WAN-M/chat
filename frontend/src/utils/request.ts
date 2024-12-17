@@ -10,7 +10,7 @@ export const request = axios.create({
 })
 request.interceptors.response.use(
   (res) => {
-    return res.data
+    return res
   },
   ({ res }) => {
     if (res.code !== 200) {

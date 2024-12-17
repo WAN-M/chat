@@ -17,7 +17,6 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Session, Message
-from .serializers import MessageSerializer
 
 LOGGER = logging.getLogger(__name__)
 # 连接 Redis
@@ -148,32 +147,26 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
     """
     API to create a new message in a specific session.
     """
-    serializer_class = MessageSerializer
 
     def create(self, request, *args, **kwargs):
         user = request.user
         session_id = request.data.get('session_id')
-
+        LOGGER.error(request.data)
         try:
             session = Session.objects.get(id=session_id, user=user)
         except Session.DoesNotExist:
             return Response({"message": "会话不存在"}, status=status.HTTP_404_NOT_FOUND)
 
-        data = {
-            'session': session.id,
-            'role': request.data.get('role', 'Model'),
-            'content': request.data.get('content', '')
-        }
+        Message.objects.create(
+            session=session, 
+            role=request.data.get('role', 'model'), 
+            content=request.data.get('content', ''))
 
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-
-        return Response({'message': '创建成功'}, status=status.HTTP_201_CREATED)
+        return Response({'message': '创建成功'}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         user = request.user
-        session_id = request.query_params.get('session_id', None)
+        session_id = kwargs.get('session_id', None)
 
         if not session_id:
             return Response({'message': '参数错误'}, status=status.HTTP_400_BAD_REQUEST)
