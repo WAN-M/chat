@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 from django_redis import get_redis_connection
-from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin
+from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Session, Message
+from .serializers import MessageSerializer
 
 LOGGER = logging.getLogger(__name__)
 # 连接 Redis
@@ -102,13 +103,46 @@ class LoginView(APIView):
         
         refresh = RefreshToken.for_user(user)
         token = refresh.access_token
-        token.set_exp(lifetime=timedelta(minutes=30))
+        token.set_exp(lifetime=timedelta(minutes=settings.TOKEN_EXPIRATION))
 
         response = Response({'token': str(token), 'code': 200}, status=status.HTTP_200_OK)
-        response.set_cookie('token', token, httponly=True, expires=timezone.now() + timedelta(minutes=30))
+        response.set_cookie('token', token, httponly=True, expires=timezone.now() + timedelta(minutes=settings.TOKEN_EXPIRATION))
         return response
 
-class SessionView(DestroyModelMixin, ListModelMixin, GenericViewSet):
+class SessionView(CreateModelMixin, 
+                  DestroyModelMixin, 
+                  ListModelMixin, 
+                  UpdateModelMixin,
+                  GenericViewSet):
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new session for user
+        """
+        user = request.user
+        Session.objects.create(user=user, session_name='新对话')
+        return Response(status=status.HTTP_200_OK)
+    
+    def update(self, request, *args, **kwargs):
+        """
+        Update session name
+        """
+        user = request.user
+        session_id = request.data.get('session_id', None)
+        session_name = request.data.get('session_name', None)
+
+        if not session_name or not session_id:
+            return Response({"message": "参数错误"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            session = Session.objects.get(id=session_id, user=user)
+        except Session.DoesNotExist:
+            return Response({"message": "会话不存在"}, status=status.HTTP_404_NOT_FOUND)
+
+        session.session_name = session_name
+        session.save()
+
+        return Response({"message": "会话更新成功"}, status=status.HTTP_200_OK)
+    
     def list(self, request, *args, **kwargs):
         """
         List all visible sessions for user.
@@ -144,11 +178,12 @@ class SessionView(DestroyModelMixin, ListModelMixin, GenericViewSet):
             return Response({"message": "会话不存在"}, status=status.HTTP_404_NOT_FOUND)
 
 class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
-    """
-    API to create a new message in a specific session.
-    """
-
+    serializer_class = MessageSerializer
+    
     def create(self, request, *args, **kwargs):
+        """
+        Create a new message in a specific session.
+        """
         user = request.user
         session_id = request.data.get('session_id')
         LOGGER.error(request.data)
@@ -165,6 +200,9 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
         return Response({'message': '创建成功'}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
+        """
+        Show all messages in a session asc by create_time
+        """
         user = request.user
         session_id = kwargs.get('session_id', None)
 
@@ -172,7 +210,7 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
             return Response({'message': '参数错误'}, status=status.HTTP_400_BAD_REQUEST)
 
         messages = Message.objects.filter(session_id=session_id, session__user=user)
-        messages = messages.order_by('created_at')  # 升序排序，最早的消息排前面
+        messages = messages.order_by('created_at')
 
         serializer = self.get_serializer(messages, many=True)
         

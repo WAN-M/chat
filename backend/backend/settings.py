@@ -208,3 +208,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# token
+TOKEN_EXPIRATION = 600 # min

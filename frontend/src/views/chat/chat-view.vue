@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { ref, nextTick, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElDialog, ElButton, ElDropdown, ElDropdownMenu, ElDropdownItem } from 'element-plus'
 import { SSE } from 'sse.js'
 import { request } from '@/utils/request'
 import MessageRow from './components/message-row.vue'
 import MessageInput from './components/message-input.vue'
+import SessionList from './components/session-list.vue'
 
 const API_PREFIX = import.meta.env.VITE_API_PREFIX
 
@@ -19,16 +20,6 @@ const inputText = ref('')
 // 所有消息的数组
 const messages = ref<{ id: string; role: 'user' | 'model'; content: string }[]>([])
 
-// 获取所有Session数据
-const fetchSessions = async () => {
-  try {
-    const session_list = await request.get('/user/session/')
-    sessionList.value = session_list.data
-  } catch (error) {
-    ElMessage.error('发生错误')
-  }
-}
-
 // 获取指定Session的所有Message
 const fetchMessages = async (sessionId: number) => {
   selectedSessionId = sessionId
@@ -40,6 +31,7 @@ const fetchMessages = async (sessionId: number) => {
   }
 }
 
+// 存储新消息
 const newMessage = async (sessionId: number, role: string, content: string) => {
   const data = {
     'session_id': sessionId,
@@ -56,7 +48,6 @@ const handleSendMessage = async (message: { text: string }) => {
     return
   }
 
-  // 用户消息
   const userMessage = {
     id: '0',
     content: message.text,
@@ -64,7 +55,6 @@ const handleSendMessage = async (message: { text: string }) => {
   }
   messages.value.push(userMessage)
 
-  // 清空输入框
   inputText.value = ''
 
   // 创建SSE连接
@@ -80,7 +70,6 @@ const handleSendMessage = async (message: { text: string }) => {
     method: 'POST'
   })
 
-  // 新建 LLM 回复消息对象
   const assistantMessage = {
     id: new Date().getTime().toString(),
     content: '',
@@ -131,24 +120,12 @@ const handleSendMessage = async (message: { text: string }) => {
   })
 }
 
-// 初始化Session列表
-onMounted(fetchSessions)
 </script>
 
 <template>
   <div class="home-view">
     <div class="side-panel">
-      <!-- 左侧的Session列表 -->
-      <div class="session-list">
-        <div
-          v-for="session in sessionList"
-          :key="session.id"
-          class="session-item"
-          @click="fetchMessages(session.id)"
-        >
-          {{ session.session_name }}
-        </div>
-      </div>
+      <SessionList @sessionSelected="fetchMessages"/>
     </div>
 
     <div class="chat-panel">
@@ -181,14 +158,6 @@ onMounted(fetchSessions)
     padding: 20px;
     background-color: #f4f4f4;
     border-right: 1px solid #ddd;
-
-    .session-list {
-      .session-item {
-        padding: 10px;
-        cursor: pointer;
-        border-bottom: 1px solid #ddd;
-      }
-    }
   }
 
   .chat-panel {
