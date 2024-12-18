@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 from django_redis import get_redis_connection
-from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin
+from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin, RetrieveModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Session, Message
-from .serializers import MessageSerializer
+from .serializers import MessageSerializer, UserSerializer
 
 LOGGER = logging.getLogger(__name__)
 # 连接 Redis
@@ -214,4 +214,12 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
 
         serializer = self.get_serializer(messages, many=True)
         
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserView(RetrieveModelMixin, GenericViewSet):
+    serializer_class = UserSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
