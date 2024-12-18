@@ -1,4 +1,5 @@
 import logging
+import os
 import random
 import string
 from datetime import timedelta
@@ -8,6 +9,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django_redis import get_redis_connection
 from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin, RetrieveModelMixin
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -46,10 +48,10 @@ class RegisterView(APIView):
         redis_connection.delete(email)  
 
         # 创建用户
-        user = User.objects.create(
+        User.objects.create_user(
             nickname=nickname,
             email=email,
-            password=User.set_password(password)
+            password=password
         )
         return Response(status=status.HTTP_200_OK)
 
@@ -223,3 +225,34 @@ class UserView(RetrieveModelMixin, GenericViewSet):
         user = request.user
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UploadKnowledgeView(APIView):
+    parser_classes = (MultiPartParser, FormParser)  # 允许解析multipart/form-data
+
+    def _gen_file_path(self, user, file_name) -> str:
+        path = settings.USER_KNOWLEDGE_DIR / f'{user.email}'
+        LOGGER.error(user.email)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path / file_name
+
+
+    def _vectorize_doc(self, file_path):
+        pass
+
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'message': '未收到文件'}, status=400)
+
+        # store file to /xxx/email/
+        file_path = self._gen_file_path(request.user, file.name)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        with open(file_path, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+
+        self._vectorize_doc(file_path)
+
+        return Response({'message': '文件上传成功'}, status=status.HTTP_200_OK)

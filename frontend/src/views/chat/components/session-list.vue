@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElDialog, ElButton, ElUpload, ElIcon } from 'element-plus'
 import { request } from '@/utils/request'
+import { Cloudy } from '@element-plus/icons-vue'
 
 const sessionList = ref<Array<{ id: number; session_name: string }>>([]) // 存储所有session
 const userName = ref<string>('') // 用户名
 const selectedSessionId = ref<number | null>(null) // 当前选中的sessionId
 const hoveredSessionId = ref<number | null>(null) // 当前悬停的sessionId
+const knowledgeBaseDialogVisible = ref(false) // 控制知识库弹框显示
+const knowledgeList = ref<Array<{ name: string; description: string }>>([]) // 存储知识库列表
 
 const emit = defineEmits<{
   (e: 'sessionSelected', sessionId: number): void
@@ -22,12 +25,6 @@ const fetchUserName = async () => {
   }
 }
 
-// 选择一个会话
-const selectSession = (sessionId: number) => {
-  selectedSessionId.value = sessionId
-  emit('sessionSelected', sessionId)
-}
-
 // 获取所有Session数据
 const fetchSessions = async () => {
   try {
@@ -38,10 +35,30 @@ const fetchSessions = async () => {
   }
 }
 
+// 获取所有知识库数据（暂时用静态数据）
+const fetchKnowledgeList = async () => {
+  try {
+    // 这里可以替换为后端接口
+    knowledgeList.value = [
+      { name: '知识库1', description: '这是第一个知识库' },
+      { name: '知识库2', description: '这是第二个知识库' }
+    ]
+  } catch (error) {
+    ElMessage.error('获取知识库列表失败')
+  }
+}
+
+// 选择一个会话
+const selectSession = (sessionId: number) => {
+  selectedSessionId.value = sessionId
+  emit('sessionSelected', sessionId)
+}
+
 // 新建对话
 const createSession = async () => {
   try {
     await request.post('/user/session/') // 假设创建会话接口
+    ElMessage.success('创建对话成功')
     fetchSessions()
   } catch (error) {
     ElMessage.error('创建对话失败')
@@ -71,10 +88,24 @@ const handleDelete = async (sessionId: number) => {
   }
 }
 
-// 初始化Session列表和用户名
+// 处理文件上传
+const handleFileUpload = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    await request.post('/user/knowledge/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    ElMessage.success('文件上传成功')
+    knowledgeBaseDialogVisible.value = false // 关闭弹框
+  } catch (error) {
+    ElMessage.error('文件上传失败')
+  }
+}
+
 onMounted(() => {
   fetchSessions()
   fetchUserName()
+  fetchKnowledgeList()
 })
 </script>
 
@@ -83,8 +114,8 @@ onMounted(() => {
     <div class="top-bar">
       <div class="greeting">Hi, {{ userName }}</div>
       <div class="icons">
-        <el-icon @click="createSession" title="新建会话"> <Plus /> </el-icon>
-        <el-icon title="我的书架"> <Books /> </el-icon>
+        <el-icon @click="createSession" title="新建会话" style="margin: 10px;"> <Plus /> </el-icon>
+        <el-icon @click="knowledgeBaseDialogVisible = true" title="我的知识库"> <Cloudy /> </el-icon>
       </div>
     </div>
 
@@ -111,6 +142,36 @@ onMounted(() => {
         </template>
       </el-dropdown>
     </div>
+
+    <!-- 知识库弹框 -->
+    <el-dialog
+      v-model="knowledgeBaseDialogVisible"
+      title="我的知识库"
+      @close="knowledgeBaseDialogVisible = false"
+      width="50%"
+      :before-close="() => { knowledgeBaseDialogVisible = false }"
+    >
+      <div v-if="knowledgeList.length === 0">暂无知识库</div>
+      <div v-else>
+        <ul>
+          <li v-for="(knowledge, index) in knowledgeList" :key="index">
+            {{ knowledge.name }} - {{ knowledge.description }}
+          </li>
+        </ul>
+      </div>
+      <el-upload
+        class="upload-demo"
+        :action="''"
+        :show-file-list="false"
+        :before-upload="handleFileUpload"
+        accept=".pdf,.txt,.docx"
+      >
+        <el-button slot="trigger" size="small" type="primary">上传知识库</el-button>
+      </el-upload>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="knowledgeBaseDialogVisible = false">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -182,6 +243,10 @@ onMounted(() => {
 
   .el-icon-more {
     font-size: 18px;
+  }
+
+  .upload-demo {
+    margin-top: 20px;
   }
 }
 </style>

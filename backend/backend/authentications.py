@@ -17,7 +17,6 @@ class CookieJWTAuthentication(JWTAuthentication):
             user = User.objects.get(**{'id': user_id})
         except User.DoesNotExist:
             raise AuthenticationFailed('Token is invalid or expired')
-
         return user
 
     def authenticate(self, request):
