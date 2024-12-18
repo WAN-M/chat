@@ -7,7 +7,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 
-from .chat_models import OllamaModel
+from .chat_models import OllamaModel, RAG, VectoreDatabase
+
 from user.models import Message, Session
 
 LOGGER = logging.getLogger(__name__)
@@ -17,11 +18,34 @@ class ChatView(APIView):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._model = OllamaModel()
+        self._use_rag = True
 
     def _event_stream(self, message):
         finished = False
-        # TODO 完善结束逻辑
         for token in self._model.chat_stream(message):
+            result_data = {
+                'result': {
+                    'output': {
+                        'content': token
+                    },
+                    'metadata': {
+                        'finishReason': 'continue'
+                    }
+                }
+            }
+            yield f"data: {json.dumps(result_data)}\n\n" # SSE需要\n\n
+
+        if not finished:
+            yield f"data: {json.dumps({'result': {'output': {'content': ''}, 'metadata': {'finishReason': 'stop'}}})}\n\n"
+
+    def _event_stream_rag(self, message, user):
+        releated_docs = RAG.search_documents(message, VectoreDatabase.get_db_dir(user) / 'vector')
+        LOGGER.info(f'Find {len(releated_docs)} file blocks')
+        for doc in releated_docs:
+            LOGGER.info(doc)
+
+        finished = False
+        for token in self._model.chat_stream_rag(message, releated_docs):
             result_data = {
                 'result': {
                     'output': {
@@ -32,15 +56,8 @@ class ChatView(APIView):
                     }
                 }
             }
-            
-            if token == "结束标志":
-                finished = True
-                result_data['result']['metadata']['finishReason'] = 'stop'
-
-            # 转为 JSON 字符串并发送给前端
             yield f"data: {json.dumps(result_data)}\n\n"
 
-        # 流结束后确保发送 finishReason 为 'stop'
         if not finished:
             yield f"data: {json.dumps({'result': {'output': {'content': ''}, 'metadata': {'finishReason': 'stop'}}})}\n\n"
 
@@ -50,10 +67,13 @@ class ChatView(APIView):
         if not message or not session_id:
             return Response({"message": "参数错误"}, status=status.HTTP_400_BAD_REQUEST)
         
-        LOGGER.info(f"Receive Session {session_id}\nMessage: {message}")
+        user = request.user
+        LOGGER.info(f"{user.nickname} Sent Message: {message}")
         session = Session.objects.get(id=session_id)
         Message.objects.create(session=session, role='user', content=message)
-        return StreamingHttpResponse(self._event_stream(message), content_type='text/event-stream')
+
+        return StreamingHttpResponse(self._event_stream_rag(message, user) if self._use_rag else self._event_stream(message), 
+                                     content_type='text/event-stream')
     
 class DebugView(APIView):
     def get(self, request):

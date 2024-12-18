@@ -12,3 +12,4 @@ drf-yasg
 langchain-chroma
 pypdf
 langchain-community
+django-environ

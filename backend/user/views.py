@@ -191,7 +191,7 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
         """
         user = request.user
         session_id = request.data.get('session_id')
-        LOGGER.error(request.data)
+        LOGGER.info(request.data)
         try:
             session = Session.objects.get(id=session_id, user=user)
         except Session.DoesNotExist:
@@ -232,15 +232,6 @@ class UserView(RetrieveModelMixin, GenericViewSet):
 class UploadKnowledgeView(APIView):
     parser_classes = (MultiPartParser, FormParser)  # 允许解析multipart/form-data
 
-    def _gen_dir(self, user) -> str:
-        path = settings.USER_KNOWLEDGE_DIR / f'{user.email}'
-        LOGGER.error(user.email)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            os.makedirs(path / 'file')
-            os.makedirs(path / 'vector')
-        return path
-
     def _vectorize_doc(self, file_path, vector_path):
         parser = ParserFactory.get_parser(file_path)()
         docs = parser.parse(file_path)
@@ -251,8 +242,12 @@ class UploadKnowledgeView(APIView):
         if not file:
             return Response({'message': '未收到文件'}, status=400)
 
-        # store file to /xxx/email/xxx
-        dir = self._gen_dir(request.user)
+        # store file to /xxx/email/xxx path
+        dir = VectoreDatabase.get_db_dir(request.user)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+            os.makedirs(dir / 'file')
+            os.makedirs(dir / 'vector')
         file_path = dir / 'file' / file.name
         vector_path = dir / 'vector' / file.name.split('.')[0]
         if os.path.exists(file_path):

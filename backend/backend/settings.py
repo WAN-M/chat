@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import environ
 import os
 from pathlib import Path
 
@@ -19,6 +20,8 @@ USER_KNOWLEDGE_DIR = BASE_DIR / 'user_knowledge'
 if not os.path.exists(USER_KNOWLEDGE_DIR):
     os.makedirs(USER_KNOWLEDGE_DIR)
 
+env = environ.Env()
+env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -92,8 +95,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'chat',
-        'USER': 'lzq',
-        'PASSWORD': '12345678',
+        'USER': env('MYSQL_USER'),
+        'PASSWORD': env('MYSQL_PASS'),
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -197,7 +200,7 @@ EMAIL_HOST = 'smtp.163.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = 'clashiwin2100@163.com'
-EMAIL_HOST_PASSWORD = 'FQWGU9s86t6Qi6vY'
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # allow all ip address
