@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import EmailView, RegisterView, LoginView, SessionView, MessageView
+from .views import EmailView, RegisterView, LoginView, SessionView, MessageView, UserView, UploadKnowledgeView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -9,4 +9,6 @@ urlpatterns = [
     path('session/<int:session_id>/', SessionView.as_view({'delete': 'destroy', 'put': 'update'}), name='delete-session'),
     path('message/<int:session_id>/', MessageView.as_view({'get': 'list'}, name='all-message')),
     path('message/', MessageView.as_view({'post': 'create'}), name='new-message'),
+    path('info/', UserView.as_view({'get': 'retrieve'}), name='user-info'),
+    path('knowledge/', UploadKnowledgeView.as_view(), name='upload-knowledge')
 ]

@@ -13,7 +13,7 @@ import {
   type FormRules
 } from 'element-plus'
 import { reactive, ref } from 'vue'
-import logo from '@/assets/logo.jpg'
+import logo from '@/assets/sjtulogored.png'
 import router from '@/router'
 import background from '@/assets/background.jpg'
 import { request } from '@/utils/request'
@@ -71,9 +71,9 @@ const handleRegister = async () => {
           <el-card class="panel">
             <div class="content">
               <div class="panel-left">
-                <el-avatar alt="logo" :size="30" shape="square" :src="logo"></el-avatar>
+                <el-avatar alt="logo" :size="80" shape="square" :src="logo" style="background-color: transparent;"></el-avatar>
                 <div class="title">AI助手</div>
-                <div class="description">构建你的AI助手</div>
+                <div class="description">你的专属知识库AI助手</div>
               </div>
               <div class="panel-right">
                 <div class="title">注册账号</div>

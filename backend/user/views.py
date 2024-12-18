@@ -1,5 +1,7 @@
 import logging
+import os
 import random
+import shutil
 import string
 from datetime import timedelta
 
@@ -7,7 +9,8 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 from django_redis import get_redis_connection
-from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin
+from rest_framework.mixins import ListModelMixin, DestroyModelMixin, CreateModelMixin, UpdateModelMixin, RetrieveModelMixin
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,7 +20,9 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Session, Message
-from .serializers import MessageSerializer
+from .serializers import MessageSerializer, UserSerializer
+from chatai.file_parser.parser_factory import ParserFactory
+from chatai.chat_models.vector_db import VectoreDatabase
 
 LOGGER = logging.getLogger(__name__)
 # 连接 Redis
@@ -46,7 +51,7 @@ class RegisterView(APIView):
         redis_connection.delete(email)  
 
         # 创建用户
-        user = User.objects.create(
+        User.objects.create_user(
             nickname=nickname,
             email=email,
             password=password
@@ -186,7 +191,7 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
         """
         user = request.user
         session_id = request.data.get('session_id')
-        LOGGER.error(request.data)
+        LOGGER.info(request.data)
         try:
             session = Session.objects.get(id=session_id, user=user)
         except Session.DoesNotExist:
@@ -215,3 +220,45 @@ class MessageView(CreateModelMixin, ListModelMixin, GenericViewSet):
         serializer = self.get_serializer(messages, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserView(RetrieveModelMixin, GenericViewSet):
+    serializer_class = UserSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UploadKnowledgeView(APIView):
+    parser_classes = (MultiPartParser, FormParser)  # 允许解析multipart/form-data
+
+    def _vectorize_doc(self, file_path, vector_path):
+        parser = ParserFactory.get_parser(file_path)()
+        docs = parser.parse(file_path)
+        VectoreDatabase.store(docs, str(vector_path))
+
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'message': '未收到文件'}, status=400)
+
+        # store file to /xxx/email/xxx path
+        dir = VectoreDatabase.get_db_dir(request.user)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+            os.makedirs(dir / 'file')
+            os.makedirs(dir / 'vector')
+        file_path = dir / 'file' / file.name
+        vector_path = dir / 'vector' / file.name.split('.')[0]
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        if os.path.exists(vector_path):
+            shutil.rmtree(vector_path)
+        
+        with open(file_path, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+
+        self._vectorize_doc(file_path, vector_path)
+
+        return Response({'message': '文件上传成功'}, status=status.HTTP_200_OK)
