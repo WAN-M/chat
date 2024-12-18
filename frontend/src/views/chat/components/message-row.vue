@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import TextLoading from './text-loading.vue'
-import botAva from '@/assets/bot.png'
+import botAva from '@/assets/sjtulogored.png'
 import userAva from '@/assets/user.png'
 import MarkdownMessage from './markdown-message.vue'
 import { defineProps } from 'vue'
@@ -19,7 +19,7 @@ const props = defineProps<{
   <div :class="['message-row', message.role === 'user' ? 'right' : 'left']">
     <div class="row">
       <template v-if="message.role === 'model'">
-        <el-avatar :src="botAva" class="avatar" shape="square" />
+        <el-avatar :src="botAva" class="avatar" shape="square" style="background-color: transparent;"/>
         <div class="message">
           <markdown-message
             :type="message.role"
@@ -34,7 +34,7 @@ const props = defineProps<{
         <div class="message">
           {{ message.content }}
         </div>
-        <el-avatar :src="avatar || userAva" class="avatar" shape="square" />
+        <el-avatar :src="userAva" class="avatar" shape="square" style="background-color: transparent;"/>
       </template>
     </div>
   </div>
@@ -80,7 +80,7 @@ const props = defineProps<{
         padding: 10px;
         border-radius: 7px;
         max-width: 70%;
-        background-color: rgb(231, 248, 255);
+        background-color: var(--slight-pink);
         text-align: left;
         border: 1px solid rgba(0, 0, 0, 0.1);
       }

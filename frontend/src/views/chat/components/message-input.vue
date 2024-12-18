@@ -50,43 +50,46 @@ const sendMessage = () => {
 .message-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 20%;
+  // padding: 10px 20%;
   background-color: #fff;
 
   .input-container {
     position: relative;
     display: flex;
     align-items: center;
-    background-color: #f5f5f5;
-    border-radius: 20px;
+    border: 2px solid var(--light-red);
+    border-radius: 30px;
+    margin-top: 20px;
+    margin-bottom: 40px;
     padding: 10px 15px;
     box-sizing: border-box;
 
     ::v-deep .input-box .el-textarea__inner {
       box-shadow: none !important;
       flex: 1;
-      background-color: transparent;
+      // background-color: var(--light-red);
       outline: none;
       font-size: 14px;
       box-sizing: border-box;
-      padding: 5px 0; 
+      padding: 5px 10px; 
     }
 
     .send-button {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #409eff; /* 发送按钮颜色 */
+      background-color: var(--sjtu-red);
       color: #fff;
-      border-radius: 50%; /* 圆形按钮 */
+      border-radius: 50%;
       cursor: pointer;
-      margin-left: 5px; /* 按钮与输入框间距 */
+      margin-left: 5px; 
       transition: background-color 0.3s;
 
       &:hover {
-        background-color: #66b1ff;
+        // background-color: #66b1ff;
+        color: #999494
       }
     }
   }

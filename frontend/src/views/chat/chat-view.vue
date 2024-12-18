@@ -25,6 +25,10 @@ const fetchMessages = async (sessionId: number) => {
   try {
     const all_message = await request.get(`/user/message/${sessionId}/`)
     messages.value = all_message.data
+    
+    await nextTick(() => {
+      messageListRef.value?.scrollTo(0, messageListRef.value?.scrollHeight)
+    })
   } catch (error) {
     ElMessage.error('发生错误')
   }
@@ -163,9 +167,10 @@ const handleSendMessage = async (message: { text: string }) => {
     flex-direction: column;
     background-color: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    align-items: center;
 
     .message-panel {
-      width: 100%;
+      width: 70%;
       height: 100%;
       display: flex;
       flex-direction: column;
@@ -176,6 +181,7 @@ const handleSendMessage = async (message: { text: string }) => {
         width: 100%;
         flex: 1;
         overflow-y: scroll;
+        scrollbar-width: none;
       }
     }
   }
