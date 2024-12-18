@@ -9,5 +9,6 @@ redis
 django-redis
 djangorestframework-simplejwt
 drf-yasg
-langchain_chroma
+langchain-chroma
 pypdf
+langchain-community
