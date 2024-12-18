@@ -32,7 +32,7 @@ const props = defineProps<{
 
       <template v-else>
         <div class="message">
-          {{message.content}}
+          {{ message.content }}
         </div>
         <el-avatar :src="avatar || userAva" class="avatar" shape="square" />
       </template>
@@ -47,19 +47,18 @@ const props = defineProps<{
 
   &.left {
     justify-content: flex-start;
+
     .row {
       display: flex;
       align-items: center;
 
       .avatar {
-        margin-right: 10px; /* 机器人头像和消息之间的间距 */
+        margin-right: 10px;
       }
 
       .message {
-        // background-color: #f4f4f5;
+        max-width: 80%;
         border-radius: 7px;
-        padding: 10px;
-        max-width: 70%;
         border: 1px solid rgba(0, 0, 0, 0.1);
       }
     }
@@ -67,21 +66,23 @@ const props = defineProps<{
 
   &.right {
     justify-content: flex-end;
+
     .row {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
 
       .avatar {
-        margin-left: 10px; /* 用户头像和消息之间的间距 */
+        margin-left: 10px;
       }
 
       .message {
-        background-color: rgb(231, 248, 255);
-        border-radius: 7px;
         padding: 10px;
+        border-radius: 7px;
         max-width: 70%;
+        background-color: rgb(231, 248, 255);
+        text-align: left;
         border: 1px solid rgba(0, 0, 0, 0.1);
-        text-align: right;
       }
     }
   }

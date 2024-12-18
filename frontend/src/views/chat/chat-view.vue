@@ -172,6 +172,7 @@ const handleSendMessage = async (message: { text: string }) => {
 
       .message-list {
         padding: 15px;
+        box-sizing: border-box;
         width: 100%;
         flex: 1;
         overflow-y: scroll;

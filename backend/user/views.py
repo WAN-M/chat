@@ -49,7 +49,7 @@ class RegisterView(APIView):
         user = User.objects.create(
             nickname=nickname,
             email=email,
-            password=password
+            password=User.set_password(password)
         )
         return Response(status=status.HTTP_200_OK)
 

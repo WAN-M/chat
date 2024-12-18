@@ -12,8 +12,6 @@ defineProps<{ message: string }>()
 <style scoped lang="scss">
 // 调整markdown组件的一些样式，deep可以修改组件内的样式，正常情况是scoped只能修改本组件的样式。
 :deep(.md-editor-preview-wrapper) {
-  padding: 0 10px;
-
   .smart-blue-theme p {
     line-height: unset;
   }
