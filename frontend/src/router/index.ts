@@ -13,7 +13,8 @@ const router = createRouter({
     },
     {
       path: '/chat',
-      component: ChatView
+      component: ChatView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
@@ -27,5 +28,19 @@ const router = createRouter({
     },
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  const isLoggedIn = localStorage.getItem('user');
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // 如果路由需要登录
+    if (!isLoggedIn) {
+      next({ path: '/login' }); // 未登录，重定向到登录页面
+    } else {
+      next(); // 已登录，允许访问
+    }
+  } else {
+    next(); // 不需要登录，直接放行
+  }
+});
 
 export default router

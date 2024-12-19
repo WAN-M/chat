@@ -1,13 +1,16 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage, ElDialog, ElButton, ElUpload, ElIcon } from 'element-plus'
+import { ref, onMounted, nextTick } from 'vue'
+import { ElMessage, ElDialog, ElButton, ElUpload, ElIcon, ElInput } from 'element-plus'
 import { request } from '@/utils/request'
-import { Cloudy } from '@element-plus/icons-vue'
+import { ChatRound, ChatSquare, Collection } from '@element-plus/icons-vue'
 
 const sessionList = ref<Array<{ id: number; session_name: string }>>([]) // 存储所有session
 const userName = ref<string>('') // 用户名
 const selectedSessionId = ref<number | null>(null) // 当前选中的sessionId
 const hoveredSessionId = ref<number | null>(null) // 当前悬停的sessionId
+const editingSessionId = ref<number | null>(null) // 正在编辑的sessionId
+const editedSessionName = ref<string>('') // 正在编辑的session名称
+const isEditing = ref<boolean>(false) // 标记是否正在编辑，用于防止重复提交
 const knowledgeBaseDialogVisible = ref(false) // 控制知识库弹框显示
 const knowledgeList = ref<Array<string>>([]) // 存储知识库列表
 
@@ -73,16 +76,32 @@ const createSession = async () => {
   }
 }
 
-// 修改对话名称
-const handleEdit = async (sessionId: number) => {
-  try {
-    const newSessionName = prompt('请输入新的对话名称:')
-    if (newSessionName) {
-      await request.put(`/user/session/${sessionId}/`, { session_name: newSessionName })
-      fetchSessions()
+// 开始编辑对话名称
+const startEditingSession = (sessionId: number, currentName: string) => {
+  editingSessionId.value = sessionId
+  editedSessionName.value = currentName
+  isEditing.value = true // 标记正在编辑
+  nextTick(() => {
+    const inputElement = document.getElementById(`edit-input-${sessionId}`) as HTMLInputElement
+    if (inputElement) {
+      inputElement.focus() // 自动聚焦输入框
     }
-  } catch (error) {
-    ElMessage.error('修改失败')
+  })
+}
+
+// 提交编辑后的对话名称
+const submitSessionNameEdit = async (sessionId: number) => {
+  if (isEditing.value && editedSessionName.value) {
+    isEditing.value = false // 禁止重复提交
+
+    try {
+      await request.put(`/user/session/${sessionId}/`, { session_name: editedSessionName.value })
+      ElMessage.success('修改对话名称成功')
+      fetchSessions()
+      editingSessionId.value = null // 结束编辑
+    } catch (error) {
+      ElMessage.error('修改对话名称失败')
+    }
   }
 }
 
@@ -122,8 +141,8 @@ onMounted(() => {
     <div class="top-bar">
       <div class="greeting">Hi, {{ userName }}</div>
       <div class="icons">
-        <el-icon @click="createSession" title="新建会话" style="margin: 10px;"> <Plus /> </el-icon>
-        <el-icon @click="knowledgeBaseDialogVisible = true" title="我的知识库"> <Cloudy /> </el-icon>
+        <el-icon @click="createSession" title="新建会话"> <ChatRound /> </el-icon>
+        <el-icon @click="knowledgeBaseDialogVisible = true" title="我的知识库"> <Collection /> </el-icon>
       </div>
     </div>
 
@@ -136,15 +155,27 @@ onMounted(() => {
       @mouseleave="hoveredSessionId = null"
       :class="{'selected': selectedSessionId === session.id, 'hovered': hoveredSessionId === session.id}"
     >
-      <span>{{ session.session_name }}</span>
+      <span>
+        <el-input
+          v-if="editingSessionId === session.id"
+          v-model="editedSessionName"
+          :id="`edit-input-${session.id}`"
+          @blur="submitSessionNameEdit(session.id)"
+          @keydown.enter="submitSessionNameEdit(session.id)"
+          placeholder="请输入对话名称"
+        />
+        <span v-else>{{ session.session_name }}</span>
+      </span>
 
-      <el-dropdown v-if="selectedSessionId === session.id || hoveredSessionId === session.id">
-        <span class="el-dropdown-link">
-          <el-icon><MoreFilled /></el-icon>
+      <el-dropdown
+        v-if="selectedSessionId === session.id || hoveredSessionId === session.id"
+      >
+        <span class="el-dropdown-link" v-if="selectedSessionId === session.id">
+          <el-icon class="more-icon"><MoreFilled /></el-icon>
         </span>
         <template #dropdown>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item @click="handleEdit(session.id)">修改对话名称</el-dropdown-item>
+          <el-dropdown-menu class="dropdown-menu" slot="dropdown">
+            <el-dropdown-item @click="startEditingSession(session.id, session.session_name)">修改对话名称</el-dropdown-item>
             <el-dropdown-item @click="handleDelete(session.id)">删除对话</el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -203,18 +234,24 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 10px;
-    background-color: #f4f4f4;
     border-bottom: 1px solid #ddd;
 
     .greeting {
-      font-size: 16px;
+      font-size: 24px;
       font-weight: bold;
     }
-
-    .icons el-icon {
+    .icons .el-icon {
       font-size: 20px;
       cursor: pointer;
-      margin-left: 15px;
+      margin: 10px;
+      
+    }
+  }
+
+  .el-icon {
+    color: var(--sjtu-red);
+    &:hover {
+      color: var(--sjtu-red-darker)
     }
   }
 
@@ -226,19 +263,31 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.3s ease;
-    border-radius: 8px;
-    margin: 5px 0;
+    border-radius: 14px;
 
     &.selected {
       background-color: var(--light-red);
     }
 
     &.hovered:hover {
-      background-color: #e0e0e0;
+      background-color: var(--slight-pink);
     }
 
     &:hover {
-      background-color: #e0e0e0;
+      background-color: var(--slight-pink);
+    }
+
+    el-input {
+      font-size: 16px;
+      font-family: 'Arial', sans-serif;
+      padding: 5px;
+      border-radius: 4px;
+      width: 150px;
+    }
+
+    span {
+      font-size: 16px;
+      font-family: 'Arial', sans-serif;
     }
   }
 
@@ -249,17 +298,14 @@ onMounted(() => {
     cursor: pointer;
     outline: none;
   }
+}
 
-  .el-dropdown-menu__item {
-    cursor: pointer;
-  }
-
-  .el-dropdown-menu__item:hover {
-    background-color: #f0f0f0;
-  }
-
-  .el-icon-more {
-    font-size: 18px;
+:deep(.el-dropdown-menu__item) {
+  cursor: pointer;
+  // color: #c79191;
+  &:hover {
+    color: var(--sjtu-red);
+    background-color: var(--slight-pink);
   }
 }
 
@@ -296,17 +342,11 @@ onMounted(() => {
 
   .upload-knowledge {
     text-align: right;
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 15px;
-    .button-knowledge {
-      background-color: var(--sjtu-red);
-      transition: background-color 0.3s;
+  }
 
-      &:hover {
-        color: #999494
-      }
-    }
+  .button-knowledge {
+    background-color: var(--sjtu-red);
+    margin-top: 20px;
   }
 }
 </style>
