@@ -9,7 +9,7 @@ const userName = ref<string>('') // 用户名
 const selectedSessionId = ref<number | null>(null) // 当前选中的sessionId
 const hoveredSessionId = ref<number | null>(null) // 当前悬停的sessionId
 const knowledgeBaseDialogVisible = ref(false) // 控制知识库弹框显示
-const knowledgeList = ref<Array<{ name: string; description: string }>>([]) // 存储知识库列表
+const knowledgeList = ref<Array<string>>([]) // 存储知识库列表
 
 const emit = defineEmits<{
   (e: 'sessionSelected', sessionId: number): void
@@ -35,16 +35,24 @@ const fetchSessions = async () => {
   }
 }
 
-// 获取所有知识库数据（暂时用静态数据）
+// 获取所有知识库数据
 const fetchKnowledgeList = async () => {
   try {
-    // 这里可以替换为后端接口
-    knowledgeList.value = [
-      { name: '知识库1', description: '这是第一个知识库' },
-      { name: '知识库2', description: '这是第二个知识库' }
-    ]
+    const knowledge_list = await request.get('/user/knowledge/')
+    knowledgeList.value = knowledge_list.data
   } catch (error) {
     ElMessage.error('获取知识库列表失败')
+  }
+}
+
+// 删除知识库
+const deleteKnowledge = async (knowledge: string) => {
+  try {
+    await request.delete(`/user/knowledge/${knowledge}/`)
+    fetchKnowledgeList()
+    ElMessage.success('知识库删除成功')
+  } catch (error) {
+    ElMessage.error('知识库删除失败')
   }
 }
 
@@ -95,10 +103,10 @@ const handleFileUpload = async (file: File) => {
 
   try {
     await request.post('/user/knowledge/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success('文件上传成功')
-    knowledgeBaseDialogVisible.value = false // 关闭弹框
+    ElMessage.success('知识库上传成功')
+    fetchKnowledgeList()
   } catch (error) {
-    ElMessage.error('文件上传失败')
+    ElMessage.error('知识库上传失败')
   }
 }
 
@@ -142,37 +150,46 @@ onMounted(() => {
         </template>
       </el-dropdown>
     </div>
-
-    <!-- 知识库弹框 -->
-    <el-dialog
-      v-model="knowledgeBaseDialogVisible"
-      title="我的知识库"
-      @close="knowledgeBaseDialogVisible = false"
-      width="50%"
-      :before-close="() => { knowledgeBaseDialogVisible = false }"
-    >
-      <div v-if="knowledgeList.length === 0">暂无知识库</div>
-      <div v-else>
-        <ul>
-          <li v-for="(knowledge, index) in knowledgeList" :key="index">
-            {{ knowledge.name }} - {{ knowledge.description }}
-          </li>
-        </ul>
-      </div>
-      <el-upload
-        class="upload-demo"
-        :action="''"
-        :show-file-list="false"
-        :before-upload="handleFileUpload"
-        accept=".pdf,.txt,.docx"
-      >
-        <el-button slot="trigger" size="small" type="primary">上传知识库</el-button>
-      </el-upload>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="knowledgeBaseDialogVisible = false">取消</el-button>
-      </span>
-    </el-dialog>
   </div>
+  <!-- 知识库弹框 -->
+  <el-dialog
+    class="dialog"
+    v-model="knowledgeBaseDialogVisible"
+    title="我的知识库"
+    @close="knowledgeBaseDialogVisible = false"
+    width="50%"
+    :before-close="() => { knowledgeBaseDialogVisible = false }"
+  >
+    <el-card class="knowledge-card">
+      <p v-if="knowledgeList.length === 0">暂无知识库</p>
+      <div
+        v-else
+        v-for="knowledge in knowledgeList"
+        :key="knowledge"
+        class="knowledge-item"
+      >
+        <!-- 知识库内容，限制宽度，并支持滚动 -->
+        <span class="knowledge-text">{{ knowledge }}</span>
+        <!-- 删除图标靠右展示 -->
+        <el-icon
+          class="delete-icon"
+          @click="deleteKnowledge(knowledge)"
+          title="删除知识库"
+        >
+          <Delete />
+        </el-icon>
+      </div>
+    </el-card>
+    <el-upload
+      class="upload-knowledge"
+      :action="''"
+      :show-file-list="false"
+      :before-upload="handleFileUpload"
+      accept=".pdf"
+    >
+      <el-button class="button-knowledge" slot="trigger" size="small" type="primary">上传知识库</el-button>
+    </el-upload>
+  </el-dialog>
 </template>
 
 <style lang="scss" scoped>
@@ -244,9 +261,52 @@ onMounted(() => {
   .el-icon-more {
     font-size: 18px;
   }
+}
 
-  .upload-demo {
-    margin-top: 20px;
+.dialog {
+  .knowledge-card {
+    position: relative;
+
+    .knowledge-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      .knowledge-text {
+        max-width: 90%;
+        overflow-x: auto;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        scrollbar-width: thin;
+      }
+
+      .delete-icon {
+        cursor: pointer;
+        color: #f56c6c;
+        font-size: 18px;
+      }
+
+      .delete-icon:hover {
+        color: var(--sjtu-red);
+      }
+    }
+  }
+
+  .upload-knowledge {
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 15px;
+    .button-knowledge {
+      background-color: var(--sjtu-red);
+      transition: background-color 0.3s;
+
+      &:hover {
+        color: #999494
+      }
+    }
   }
 }
 </style>
