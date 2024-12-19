@@ -229,7 +229,7 @@ class UserView(RetrieveModelMixin, GenericViewSet):
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class UploadKnowledgeView(APIView):
+class KnowledgeView(CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet):
     parser_classes = (MultiPartParser, FormParser)  # 允许解析multipart/form-data
 
     def _vectorize_doc(self, file_path, vector_path):
@@ -237,7 +237,7 @@ class UploadKnowledgeView(APIView):
         docs = parser.parse(file_path)
         VectoreDatabase.store(docs, str(vector_path))
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         file = request.FILES.get('file')
         if not file:
             return Response({'message': '未收到文件'}, status=400)
@@ -262,3 +262,23 @@ class UploadKnowledgeView(APIView):
         self._vectorize_doc(file_path, vector_path)
 
         return Response({'message': '文件上传成功'}, status=status.HTTP_200_OK)
+    
+    def destroy(self, request, *args, **kwargs):
+        knowledge_name = kwargs.get('knowledge_name')
+        dir = VectoreDatabase.get_db_dir(request.user)
+        file_dir = dir / 'file'
+        vector_dir = dir / 'vector'
+        rm_dir = file_dir / 'remove'
+        if not os.path.exists(rm_dir):
+            os.makedirs(rm_dir)
+        shutil.move(file_dir / knowledge_name, rm_dir / knowledge_name)
+        shutil.rmtree(vector_dir / knowledge_name.split('.')[0])
+        return Response({'message': '知识库删除成功'}, status=status.HTTP_200_OK)
+    
+    def list(self, request, *args, **kwargs):
+        dir = VectoreDatabase.get_db_dir(request.user) / 'file'
+        if os.path.exists(dir):
+            file_names = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+        else:
+            file_names = []
+        return Response(file_names, status=status.HTTP_200_OK)
