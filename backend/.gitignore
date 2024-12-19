@@ -3,3 +3,5 @@
 local_knowledge
 user_knowledge
 .env
+*.pyc
+__pycache__/
