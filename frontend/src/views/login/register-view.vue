@@ -15,7 +15,7 @@ import {
 import { reactive, ref } from 'vue'
 import logo from '@/assets/sjtulogored.png'
 import router from '@/router'
-import background from '@/assets/background.jpg'
+import background from '@/assets/flower-background.png'
 import { request } from '@/utils/request'
 import { assertFormValidate } from '@/utils/common'
 
@@ -105,7 +105,7 @@ const handleRegister = async () => {
                   <el-button class="register" type="primary" @click="handleRegister">
                     注册
                   </el-button>
-                  <el-button class="login" size="small" link @click="router.replace('/login')">
+                  <el-button class="login" link @click="router.replace('/login')">
                     登录
                   </el-button>
                 </div>
@@ -129,6 +129,7 @@ const handleRegister = async () => {
 
 .panel-wrapper {
   height: 100vh;
+  margin-left: 50vh;
 
   .panel {
     .content {
@@ -151,7 +152,7 @@ const handleRegister = async () => {
       .panel-left {
         box-sizing: border-box;
         padding: 30px;
-        background-color: rgb(243, 245, 249);
+        background-color: var(--slight-pink);
         width: 50%;
         border-radius: 5px;
       }
@@ -170,6 +171,12 @@ const handleRegister = async () => {
 
             .send-sms {
               margin-left: 20px;
+              
+              &:hover {
+                background-color: var(--light-red);
+                color: var(--sjtu-red);
+                border: none;
+              }
             }
           }
         }
@@ -182,12 +189,25 @@ const handleRegister = async () => {
 
           .register {
             width: 120px;
+            background-color: var(--sjtu-red);
+            border: none;
+
+            &:hover {
+              background-color: var(--sjtu-red-darker);
+              color: #c5c0c0
+            }
           }
 
           .login {
-            position: absolute;
-            right: 0;
-            bottom: 0;
+            width: 120px;
+            margin-left: 20px;
+            border: 1px solid #c5c0c0;
+
+            &:hover {
+              background-color: var(--light-red);
+              color: var(--sjtu-red);
+              border: none;
+            }
           }
         }
       }

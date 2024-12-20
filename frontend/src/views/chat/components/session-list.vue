@@ -358,6 +358,11 @@ onMounted(() => {
   .button-knowledge {
     background-color: var(--sjtu-red);
     margin-top: 20px;
+
+    &:hover {
+      background-color: var(--sjtu-red-darker);
+      color: #c5c0c0
+    }
   }
 }
 </style>
