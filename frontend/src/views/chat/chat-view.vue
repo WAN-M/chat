@@ -157,7 +157,7 @@ const handleSendMessage = async (message: { text: string }) => {
   .side-panel {
     width: 20%;
     padding: 20px;
-    background-color: #f4f4f4;
+    background-color: var(--session-list-pink);
     border-right: 1px solid #ddd;
   }
 

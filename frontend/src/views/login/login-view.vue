@@ -12,10 +12,10 @@ import {
   type FormInstance,
   type FormRules
 } from 'element-plus'
-import { onMounted, reactive, ref, Transition } from 'vue'
+import { onMounted, onUnmounted, reactive, ref, Transition } from 'vue'
 import logo from '@/assets/sjtulogored.png'
 import router from '@/router'
-import background from '@/assets/background.jpg'
+import background from '@/assets/flower-background.png'
 import { request } from '@/utils/request'
 
 // 登录表单
@@ -44,13 +44,27 @@ onMounted(() => {
 const handleLogin = async () => {
   try {
     const res = await request.post('/user/login/', loginForm)
+    sessionStorage.setItem('user', JSON.stringify(res.data));
     ElMessage.success('登录成功')
     await router.replace({ path: '/chat' })
   } catch (error) {
     ElMessage.error('登录失败')
-    console.error(error)
   }
 }
+
+//点击回车键登录
+const keyDown = (e: KeyboardEvent) => {
+	if (e.key === 'Enter') {
+		handleLogin()
+	}
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', keyDown)
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', keyDown)
+})
 </script>
 
 <template>
@@ -84,11 +98,10 @@ const handleLogin = async () => {
                   </el-form-item>
                 </el-form>
                 <div class="button-wrapper">
-                  <el-button class="login" type="primary" @click="handleLogin"> 登录 </el-button>
+                  <el-button class="login" type="primary" @click="handleLogin" @keydown.enter="keyDown"> 登录 </el-button>
                   <el-button
                     class="register"
                     type="info"
-                    size="small"
                     link
                     @click="() => router.push('/register')"
                   >
@@ -115,6 +128,7 @@ const handleLogin = async () => {
 
 .panel-wrapper {
   height: 100vh;
+  margin-left: 50vh;
 
   .panel {
     .content {
@@ -137,7 +151,7 @@ const handleLogin = async () => {
       .panel-left {
         box-sizing: border-box;
         padding: 30px;
-        background-color: rgb(243, 245, 249);
+        background-color: var(--slight-pink);
         width: 50%;
         border-radius: 5px;
       }
@@ -158,12 +172,25 @@ const handleLogin = async () => {
 
           .login {
             width: 120px;
+            background-color: var(--sjtu-red);
+            border: none;
+
+            &:hover {
+              background-color: var(--sjtu-red-darker);
+              color: #c5c0c0
+            }
           }
 
           .register {
-            position: absolute;
-            right: 0;
-            bottom: 0;
+            width: 120px;
+            margin-left: 20px;
+            border: 1px solid #c5c0c0;
+
+            &:hover {
+              background-color: var(--light-red);
+              color: var(--sjtu-red);
+              border: none;
+            }
           }
         }
       }

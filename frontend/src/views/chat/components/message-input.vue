@@ -88,8 +88,8 @@ const sendMessage = () => {
       transition: background-color 0.3s;
 
       &:hover {
-        // background-color: #66b1ff;
-        color: #999494
+        background-color: var(--sjtu-red-darker);
+        color: #c5c0c0
       }
     }
   }

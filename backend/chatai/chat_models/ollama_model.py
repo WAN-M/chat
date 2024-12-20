@@ -5,18 +5,21 @@ from langchain_ollama.llms import OllamaLLM
 from .base_model import BaseModel
 
 RAG_TEMPLATE = """
-You are an assistant for question-answering tasks. \
-Use the following pieces of retrieved context to answer the question. \
-If you don't know the answer, just say that you don't know. \
-Use three sentences maximum and keep the answer concise. \
+You are an assistant for question-answering tasks. Below is the context retrieved from documents. 
+If the question is related to the context, use the information to generate an answer. 
+If the question is unrelated to the context, answer based on your own knowledge. 
+If you do not know the answer, just say that you do not know. Be concise.
 
+Context:
 <context>
 {context}
 </context>
 
-Answer the following question:
+Question:
+{question}
 
-{question}"""
+Answer:
+"""
 
 rag_prompt = ChatPromptTemplate.from_template(RAG_TEMPLATE)
 
