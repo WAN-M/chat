@@ -2,7 +2,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElDialog, ElButton, ElUpload, ElIcon, ElInput } from 'element-plus'
 import { request } from '@/utils/request'
-import { ChatRound, ChatSquare, Collection } from '@element-plus/icons-vue'
+import { ChatRound, Collection } from '@element-plus/icons-vue'
 
 const sessionList = ref<Array<{ id: number; session_name: string }>>([]) // 存储所有session
 const userName = ref<string>('') // 用户名
@@ -62,6 +62,7 @@ const deleteKnowledge = async (knowledge: string) => {
 // 选择一个会话
 const selectSession = (sessionId: number) => {
   selectedSessionId.value = sessionId
+  localStorage.setItem('selectedSessionId', sessionId.toString())
   emit('sessionSelected', sessionId)
 }
 
@@ -129,10 +130,20 @@ const handleFileUpload = async (file: File) => {
   }
 }
 
+const chooseSession = () => {
+  const storedSessionId = localStorage.getItem('selectedSessionId');
+  if (storedSessionId) {
+    selectSession(parseInt(storedSessionId, 10));
+  } else {
+    selectedSessionId.value = null;
+  }
+}
+
 onMounted(() => {
   fetchSessions()
   fetchUserName()
   fetchKnowledgeList()
+  chooseSession()
 })
 </script>
 
