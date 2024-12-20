@@ -30,7 +30,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = localStorage.getItem('user');
+  const isLoggedIn = sessionStorage.getItem('user');
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // 如果路由需要登录
     if (!isLoggedIn) {

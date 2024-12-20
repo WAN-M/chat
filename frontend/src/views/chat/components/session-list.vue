@@ -61,8 +61,11 @@ const deleteKnowledge = async (knowledge: string) => {
 
 // 选择一个会话
 const selectSession = (sessionId: number) => {
+  if (sessionId == -1) {
+    return
+  }
   selectedSessionId.value = sessionId
-  localStorage.setItem('selectedSessionId', sessionId.toString())
+  sessionStorage.setItem('selectedSessionId', sessionId.toString())
   emit('sessionSelected', sessionId)
 }
 
@@ -71,7 +74,8 @@ const createSession = async () => {
   try {
     await request.post('/user/session/') // 假设创建会话接口
     ElMessage.success('创建对话成功')
-    fetchSessions()
+    sessionStorage.removeItem('selectedSessionId')
+    updateSessions()
   } catch (error) {
     ElMessage.error('创建对话失败')
   }
@@ -98,7 +102,7 @@ const submitSessionNameEdit = async (sessionId: number) => {
     try {
       await request.put(`/user/session/${sessionId}/`, { session_name: editedSessionName.value })
       ElMessage.success('修改对话名称成功')
-      fetchSessions()
+      updateSessions()
       editingSessionId.value = null // 结束编辑
     } catch (error) {
       ElMessage.error('修改对话名称失败')
@@ -110,7 +114,8 @@ const submitSessionNameEdit = async (sessionId: number) => {
 const handleDelete = async (sessionId: number) => {
   try {
     await request.delete(`/user/session/${sessionId}/`)
-    fetchSessions() // 更新列表
+    sessionStorage.removeItem('selectedSessionId')
+    updateSessions() // 更新列表
   } catch (error) {
     ElMessage.error('删除失败')
   }
@@ -144,20 +149,24 @@ const handleFileUpload = async (file: File) => {
   }
 }
 
-const chooseSession = () => {
-  const storedSessionId = localStorage.getItem('selectedSessionId');
+const updateSessions = async () => {
+  await fetchSessions()
+  const storedSessionId = sessionStorage.getItem('selectedSessionId');
+  let session_id = -1
+  console.log(sessionList.value.length)
   if (storedSessionId) {
-    selectSession(parseInt(storedSessionId, 10));
-  } else {
-    selectedSessionId.value = null;
+    session_id = parseInt(storedSessionId, 10);
+  } else if (sessionList.value.length > 0) {
+    session_id = sessionList.value[0].id;
   }
+  console.log(session_id)
+  selectSession(session_id)
 }
 
 onMounted(() => {
-  fetchSessions()
   fetchUserName()
   fetchKnowledgeList()
-  chooseSession()
+  updateSessions()
 })
 </script>
 

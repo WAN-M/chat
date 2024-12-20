@@ -44,7 +44,7 @@ onMounted(() => {
 const handleLogin = async () => {
   try {
     const res = await request.post('/user/login/', loginForm)
-    localStorage.setItem('user', JSON.stringify(res.data));
+    sessionStorage.setItem('user', JSON.stringify(res.data));
     ElMessage.success('登录成功')
     await router.replace({ path: '/chat' })
   } catch (error) {
