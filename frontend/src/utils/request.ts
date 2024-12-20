@@ -12,15 +12,17 @@ request.interceptors.response.use(
   (res) => {
     return res
   },
-  ({ res }) => {
-    if (res.code !== 200) {
-      ElMessage.warning({ message: res.message })
+  (error) => {
+    if (error.response) {
+      const { status, data } = error.response;
+      ElMessage.warning({ message: data.message || '请求错误' })
+
+      if (status === 401) {
+        ElMessage.error('未授权，跳转到登录页面')
+        router.push('/login')
+      }
     }
-    // FIX 似乎没起作用，后面再调试
-    // token存储在cookie中，如果之前登录过，想重新登录，此时发送登录请求同样会携带token，不符合预期：1. 前端不携带token 2. 后端不验证登录接口的token
-    if (res.code === 401) {
-      router.push('/login')
-    }
-    return Promise.reject(res.data)
+
+    return Promise.reject(error.response ? error.response.data : error)
   }
 )

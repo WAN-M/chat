@@ -118,6 +118,20 @@ const handleDelete = async (sessionId: number) => {
 
 // 处理文件上传
 const handleFileUpload = async (file: File) => {
+  // 限制文件类型及大小
+  const fileSuffix = file.name.substring(file.name.lastIndexOf(".") + 1);
+  const whiteList = ["pdf"];
+  if (whiteList.indexOf(fileSuffix) === -1) {
+    ElMessage.error('上传文件只能是 pdf格式');
+    return false;
+  }
+ 
+  const sizeOk = file.size / 1024 / 1024 < 20;
+  if (!sizeOk) {
+    ElMessage.error('上传文件大小不能超过 20MB');
+    return false;
+  }
+
   const formData = new FormData()
   formData.append('file', file)
 
@@ -275,6 +289,7 @@ onMounted(() => {
     align-items: center;
     transition: background-color 0.3s ease;
     border-radius: 14px;
+    color: #5e5757;
 
     &.selected {
       background-color: var(--light-red);
@@ -358,6 +373,7 @@ onMounted(() => {
   .button-knowledge {
     background-color: var(--sjtu-red);
     margin-top: 20px;
+    border: none;
 
     &:hover {
       background-color: var(--sjtu-red-darker);

@@ -12,7 +12,7 @@ import {
   type FormInstance,
   type FormRules
 } from 'element-plus'
-import { onMounted, reactive, ref, Transition } from 'vue'
+import { onMounted, onUnmounted, reactive, ref, Transition } from 'vue'
 import logo from '@/assets/sjtulogored.png'
 import router from '@/router'
 import background from '@/assets/flower-background.png'
@@ -49,9 +49,22 @@ const handleLogin = async () => {
     await router.replace({ path: '/chat' })
   } catch (error) {
     ElMessage.error('登录失败')
-    console.error(error)
   }
 }
+
+//点击回车键登录
+const keyDown = (e: KeyboardEvent) => {
+	if (e.key === 'Enter') {
+		handleLogin()
+	}
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', keyDown)
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', keyDown)
+})
 </script>
 
 <template>
@@ -85,7 +98,7 @@ const handleLogin = async () => {
                   </el-form-item>
                 </el-form>
                 <div class="button-wrapper">
-                  <el-button class="login" type="primary" @click="handleLogin"> 登录 </el-button>
+                  <el-button class="login" type="primary" @click="handleLogin" @keydown.enter="keyDown"> 登录 </el-button>
                   <el-button
                     class="register"
                     type="info"

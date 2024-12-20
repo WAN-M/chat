@@ -12,7 +12,7 @@ import {
   type FormInstance,
   type FormRules
 } from 'element-plus'
-import { reactive, ref } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import logo from '@/assets/sjtulogored.png'
 import router from '@/router'
 import background from '@/assets/flower-background.png'
@@ -29,13 +29,38 @@ const ruleFormRef = ref<FormInstance>()
 
 // 表单验证规则
 const rules = reactive<FormRules<typeof registerForm>>({
-  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
-  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { 
+      pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 
+      message: '请输入有效的邮箱地址', 
+      trigger: 'blur' 
+    }
+  ],
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { 
+      pattern: /^[a-zA-Z0-9_\u4e00-\u9fa5]{3,16}$/, 
+      message: '昵称应由3到16个字符组成，允许中文、字母、数字或下划线', 
+      trigger: 'blur' 
+    }
+  ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { max: 16, min: 6, message: '密码长度介于6到16个字符' }
+    { 
+      pattern: /^.{6,16}$/, 
+      message: '密码长度应介于6到16个字符之间', 
+      trigger: 'blur' 
+    }
   ],
-  verifyCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
+  verifyCode: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { 
+      pattern: /^[a-zA-Z0-9]{6}$/, 
+      message: '验证码无效', 
+      trigger: 'blur' 
+    }
+  ]
 })
 
 // 发送验证码请求
@@ -60,6 +85,20 @@ const handleRegister = async () => {
     )
   )
 }
+
+//点击回车键注册
+const keyDown = (e: KeyboardEvent) => {
+	if (e.key === 'Enter') {
+		handleRegister()
+	}
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', keyDown)
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', keyDown)
+})
 </script>
 
 <template>
@@ -102,7 +141,7 @@ const handleRegister = async () => {
                   </el-form-item>
                 </el-form>
                 <div class="button-wrapper">
-                  <el-button class="register" type="primary" @click="handleRegister">
+                  <el-button class="register" type="primary" @click="handleRegister" @keydown.enter="keyDown">
                     注册
                   </el-button>
                   <el-button class="login" link @click="router.replace('/login')">
