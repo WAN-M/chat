@@ -39,7 +39,7 @@ class RegisterView(APIView):
 
         LOGGER.info(f'Register Request From {email}, VerifyCode is {verifyCode}')
 
-        if (User.objects.get(email=email)):
+        if (User.objects.filter(email=email).exists()):
             return Response({'message': '邮箱已注册', 'code': 400}, status=status.HTTP_400_BAD_REQUEST)
 
         # 从 Redis 获取验证码
