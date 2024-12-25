@@ -33,6 +33,7 @@ const fetchSessions = async () => {
   try {
     const session_list = await request.get('/user/session/')
     sessionList.value = session_list.data
+    console.log(sessionList.value)
   } catch (error) {
     ElMessage.error('发生错误')
   }
@@ -61,11 +62,10 @@ const deleteKnowledge = async (knowledge: string) => {
 
 // 选择一个会话
 const selectSession = (sessionId: number) => {
-  if (sessionId == -1) {
-    return
-  }
   selectedSessionId.value = sessionId
-  sessionStorage.setItem('selectedSessionId', sessionId.toString())
+  if (sessionId !== -1) {
+    sessionStorage.setItem('selectedSessionId', sessionId.toString())
+  }
   emit('sessionSelected', sessionId)
 }
 
