@@ -1,3 +1,4 @@
+import chromadb.api
 import os
 from typing import List
 from django.conf import settings
@@ -14,6 +15,7 @@ class VectoreDatabase():
 
     @staticmethod
     def store(docs: List, persist_path: str):
+        chromadb.api.client.SharedSystemClient.clear_system_cache()
         vectordb = Chroma.from_documents(documents=docs, 
                                          embedding=VectoreDatabase.embeddings, 
                                          persist_directory=persist_path)
