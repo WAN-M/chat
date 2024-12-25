@@ -19,7 +19,6 @@ const emit = defineEmits<{
 const message = ref<Message>({ text: '' })
 
 const sendMessage = () => {
-  console.log(props.isLoading)
   if (!message.value.text) {
     ElMessage.warning('请输入消息')
     return
@@ -44,11 +43,6 @@ const sendMessage = () => {
         @keydown.enter.prevent="sendMessage"
       />
       <el-button class="send-button" @click="sendMessage" type="primary" :icon="Position" :disabled="props.isLoading"></el-button>
-      <!-- <div class="send-button" @click="sendMessage">
-        <el-icon size="20">
-          <Position />
-        </el-icon>
-      </div> -->
     </div>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { SSE } from 'sse.js'
 import { request } from '@/utils/request'
@@ -11,7 +11,8 @@ const API_PREFIX = import.meta.env.VITE_API_PREFIX
 
 const messageListRef = ref<InstanceType<typeof HTMLDivElement>>()
 const loadingMessageId = ref<string | null>(null) // 标记当前 LLM 回复的消息ID
-let selectedSessionId:number = -1 // 默认为 -1 表示需要新建会话
+let selectedSessionId: number = -1 // 默认为 -1 表示需要新建会话
+let evtSource: SSE | null = null
 
 // 用户输入的文本
 const inputText = ref('')
@@ -21,6 +22,9 @@ const messages = ref<{ id: string; role: 'user' | 'model'; content: string }[]>(
 
 // 获取指定Session的所有Message
 const fetchMessages = async (sessionId: number) => {
+  // 切断之前的SSE连接
+  clearSSEResponse()
+
   selectedSessionId = sessionId
   try {
     const all_message = await request.get(`/user/message/${sessionId}/`)
@@ -65,7 +69,7 @@ const handleSendMessage = async (message: { text: string }) => {
     session_id: selectedSessionId,
     message: message.text
   }
-  const evtSource = new SSE(API_PREFIX + '/chat/', {
+  evtSource = new SSE(API_PREFIX + '/chat/', {
     withCredentials: true,
     start: false,
     headers: {'Content-Type': 'application/json;charset=UTF-8'},
@@ -105,12 +109,7 @@ const handleSendMessage = async (message: { text: string }) => {
 
     // 判断是否结束
     if (response.result?.metadata?.finishReason?.toLowerCase() === 'stop') {
-      evtSource.close()
-      const assistantMessageIndex = messages.value.findIndex(
-        msg => msg.id === loadingMessageId.value
-      )
-      newMessage(selectedSessionId, 'model', messages.value[assistantMessageIndex].content) // 存储完整回复
-      loadingMessageId.value = null // 结束加载
+      clearSSEResponse()
     }
   })
 
@@ -122,6 +121,25 @@ const handleSendMessage = async (message: { text: string }) => {
     messageListRef.value?.scrollTo(0, messageListRef.value?.scrollHeight)
   })
 }
+
+const clearSSEResponse = () => {
+  if (evtSource) {
+    // 保存未结束的回复
+    const assistantMessageIndex = messages.value.findIndex(
+      msg => msg.id === loadingMessageId.value
+    )
+    if (assistantMessageIndex !== -1) {
+      newMessage(selectedSessionId, 'model', messages.value[assistantMessageIndex].content)
+    }
+
+    evtSource.close()
+    evtSource = null
+    loadingMessageId.value = null
+  }
+}
+
+// 刷新页面时切断SSE并保存回复
+window.addEventListener('beforeunload', clearSSEResponse)
 
 </script>
 
