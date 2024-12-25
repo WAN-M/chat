@@ -89,7 +89,7 @@ const handleSendMessage = async (message: { text: string }) => {
       const assistantMessageIndex = messages.value.findIndex(
         msg => msg.id === loadingMessageId.value
       )
-      console.log(assistantMessageIndex)
+
       if (assistantMessageIndex !== -1) {
         // 更新 LLM 消息内容
         messages.value[assistantMessageIndex].content += response.result.output.content
@@ -136,13 +136,13 @@ const handleSendMessage = async (message: { text: string }) => {
         <div ref="messageListRef" class="message-list">
           <transition-group name="list">
             <message-row
-              v-for="message in messages"
-              :key="message.id"
+              v-for="(message, index) in messages"
+              :key="index"
               :message="message"
             ></message-row>
           </transition-group>
         </div>
-        <message-input @send="handleSendMessage"></message-input>
+        <message-input @send="handleSendMessage" :isLoading="loadingMessageId !== null"></message-input>
       </div>
     </div>
   </div>

@@ -6,6 +6,11 @@ import { ElMessage } from 'element-plus'
 type Message = {
   text: string
 }
+
+const props = defineProps<{
+  isLoading: boolean
+}>()
+
 const emit = defineEmits<{
   send: [message: Message]
 }>()
@@ -14,6 +19,7 @@ const emit = defineEmits<{
 const message = ref<Message>({ text: '' })
 
 const sendMessage = () => {
+  console.log(props.isLoading)
   if (!message.value.text) {
     ElMessage.warning('请输入消息')
     return
@@ -37,11 +43,12 @@ const sendMessage = () => {
         style="background-color: #f5f5f5;"
         @keydown.enter.prevent="sendMessage"
       />
-      <div class="send-button" @click="sendMessage">
+      <el-button class="send-button" @click="sendMessage" type="primary" :icon="Position" :disabled="props.isLoading"></el-button>
+      <!-- <div class="send-button" @click="sendMessage">
         <el-icon size="20">
           <Position />
         </el-icon>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -83,6 +90,7 @@ const sendMessage = () => {
       background-color: var(--sjtu-red);
       color: #fff;
       border-radius: 50%;
+      border: none;
       cursor: pointer;
       margin-left: 5px; 
       transition: background-color 0.3s;
@@ -90,6 +98,11 @@ const sendMessage = () => {
       &:hover {
         background-color: var(--sjtu-red-darker);
         color: #c5c0c0
+      }
+
+      &:disabled {
+        background-color: var(--sjtu-red-darker);
+        cursor: not-allowed;
       }
     }
   }
