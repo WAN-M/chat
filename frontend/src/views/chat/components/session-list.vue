@@ -153,13 +153,11 @@ const updateSessions = async () => {
   await fetchSessions()
   const storedSessionId = sessionStorage.getItem('selectedSessionId');
   let session_id = -1
-  console.log(sessionList.value.length)
   if (storedSessionId) {
     session_id = parseInt(storedSessionId, 10);
   } else if (sessionList.value.length > 0) {
     session_id = sessionList.value[0].id;
   }
-  console.log(session_id)
   selectSession(session_id)
 }
 
