@@ -10,8 +10,8 @@ import SessionList from './components/session-list.vue'
 const API_PREFIX = import.meta.env.VITE_API_PREFIX
 
 const messageListRef = ref<InstanceType<typeof HTMLDivElement>>()
+const sessionListRef = ref<InstanceType<typeof SessionList>>()
 const loadingMessageId = ref<string | null>(null) // 标记当前 LLM 回复的消息ID
-let selectedSessionId: number = -1 // 默认为 -1 表示需要新建会话
 let evtSource: SSE | null = null
 
 // 用户输入的文本
@@ -26,7 +26,6 @@ const fetchMessages = async (sessionId: number) => {
   clearSSEResponse()
 
   // 与组件内保持一致
-  selectedSessionId = sessionId
   if (sessionId === -1) {
     messages.value = []
     return
@@ -61,7 +60,7 @@ const handleSendMessage = async (message: { text: string }) => {
     return
   }
 
-  if (selectedSessionId == -1) {
+  if (sessionListRef.value?.selectedSessionId == -1) {
     ElMessage.warning('请创建新对话')
     return
   }
@@ -77,7 +76,7 @@ const handleSendMessage = async (message: { text: string }) => {
 
   // 创建SSE连接
   const data = {
-    session_id: selectedSessionId,
+    session_id: sessionListRef.value?.selectedSessionId,
     message: message.text
   }
   evtSource = new SSE(API_PREFIX + '/chat/', {
@@ -139,8 +138,8 @@ const clearSSEResponse = () => {
     const assistantMessageIndex = messages.value.findIndex(
       msg => msg.id === loadingMessageId.value
     )
-    if (assistantMessageIndex !== -1) {
-      newMessage(selectedSessionId, 'model', messages.value[assistantMessageIndex].content)
+    if (assistantMessageIndex !== -1 && sessionListRef.value) {
+      newMessage(sessionListRef.value.selectedSessionId, 'model', messages.value[assistantMessageIndex].content)
     }
 
     evtSource.close()
@@ -157,7 +156,7 @@ window.addEventListener('beforeunload', clearSSEResponse)
 <template>
   <div class="home-view">
     <div class="side-panel">
-      <SessionList @sessionSelected="fetchMessages"/>
+      <SessionList ref="sessionListRef" @sessionSelected="fetchMessages"/>
     </div>
 
     <div class="chat-panel">

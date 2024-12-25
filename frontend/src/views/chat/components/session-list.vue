@@ -6,7 +6,7 @@ import { ChatRound, Collection } from '@element-plus/icons-vue'
 
 const sessionList = ref<Array<{ id: number; session_name: string }>>([]) // 存储所有session
 const userName = ref<string>('') // 用户名
-const selectedSessionId = ref<number | null>(null) // 当前选中的sessionId
+const selectedSessionId = ref<number>(-1) // 当前选中的sessionId
 const hoveredSessionId = ref<number | null>(null) // 当前悬停的sessionId
 const editingSessionId = ref<number | null>(null) // 正在编辑的sessionId
 const editedSessionName = ref<string>('') // 正在编辑的session名称
@@ -17,6 +17,10 @@ const knowledgeList = ref<Array<string>>([]) // 存储知识库列表
 const emit = defineEmits<{
   (e: 'sessionSelected', sessionId: number): void
 }>()
+
+defineExpose({
+  selectedSessionId
+})
 
 // 获取用户信息
 const fetchUserName = async () => {
