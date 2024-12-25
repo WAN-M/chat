@@ -25,7 +25,13 @@ const fetchMessages = async (sessionId: number) => {
   // 切断之前的SSE连接
   clearSSEResponse()
 
+  // 与组件内保持一致
   selectedSessionId = sessionId
+  if (sessionId === -1) {
+    messages.value = []
+    return
+  }
+
   try {
     const all_message = await request.get(`/user/message/${sessionId}/`)
     messages.value = all_message.data
@@ -52,6 +58,11 @@ const newMessage = async (sessionId: number, role: string, content: string) => {
 const handleSendMessage = async (message: { text: string }) => {
   if (!message.text) {
     ElMessage.warning('请输入消息')
+    return
+  }
+
+  if (selectedSessionId == -1) {
+    ElMessage.warning('请创建新对话')
     return
   }
 
