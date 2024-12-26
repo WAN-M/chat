@@ -11,6 +11,9 @@ class RAG():
 
     @staticmethod
     def search_documents(query: str, db_dir: str, top_k: int = 5):
+        # 用户还没上传任何知识库
+        if not os.path.exists(db_dir):
+            return []
         all_documents = []
         # 遍历目录中的所有用户文档
         for file_name in os.listdir(db_dir):

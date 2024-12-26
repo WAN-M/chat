@@ -42,8 +42,16 @@ const props = defineProps<{
 
 <style lang="scss" scoped>
 .message-row {
-  display: flex;
   margin-bottom: 10px;
+
+  .message {
+    max-width: 70%;
+    text-align: left;
+    border-radius: 7px;
+    word-wrap: break-word;
+    word-break: break-all;
+    white-space: normal;
+  }
 
   &.left {
     justify-content: flex-start;
@@ -57,8 +65,6 @@ const props = defineProps<{
       }
 
       .message {
-        max-width: 80%;
-        border-radius: 7px;
         border: 1px solid rgba(0, 0, 0, 0.1);
       }
     }
@@ -78,10 +84,7 @@ const props = defineProps<{
 
       .message {
         padding: 10px;
-        border-radius: 7px;
-        max-width: 70%;
         background-color: var(--slight-pink);
-        text-align: left;
         border: 1px solid rgba(0, 0, 0, 0.1);
       }
     }
