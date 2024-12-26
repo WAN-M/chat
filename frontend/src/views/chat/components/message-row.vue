@@ -45,7 +45,7 @@ const props = defineProps<{
   margin-bottom: 10px;
 
   .message {
-    max-width: 80%;
+    max-width: 70%;
     text-align: left;
     border-radius: 7px;
     word-wrap: break-word;
