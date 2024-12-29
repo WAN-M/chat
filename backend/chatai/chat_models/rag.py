@@ -8,6 +8,7 @@ LOGGER = logging.getLogger(__name__)
 
 class RAG():
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
+    similarity_threshold = 0.75
 
     @staticmethod
     def search_documents(query: str, db_dir: str, top_k: int = 5):
@@ -20,7 +21,7 @@ class RAG():
             folder_path = os.path.join(db_dir, file_name)
             if os.path.isdir(folder_path):
                 vector_store = Chroma(persist_directory=folder_path, embedding_function=RAG.embeddings)
-                search_results = vector_store.similarity_search(query, k=top_k)
+                search_results = vector_store.similarity_search_with_score(query, k=top_k)
                 all_documents.extend(search_results)
 
         return all_documents
