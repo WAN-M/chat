@@ -7,7 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 
-from .chat_models import OllamaModel, RAG, VectoreDatabase
+from .chat_models import OllamaModel, ElasticSearchRAG, RAG, VectoreDatabase
 
 from user.models import Message, Session
 
@@ -39,7 +39,7 @@ class ChatView(APIView):
             yield f"data: {json.dumps({'result': {'output': {'content': ''}, 'metadata': {'finishReason': 'stop'}}})}\n\n"
 
     def _event_stream_rag(self, message, user):
-        releated_docs = RAG.search_documents(message, VectoreDatabase.get_db_dir(user) / 'vector')
+        releated_docs = ElasticSearchRAG.search_documents(message, str(VectoreDatabase.get_db_dir(user) / 'vector'))
         LOGGER.info(f'Find {len(releated_docs)} file blocks')
         for doc in releated_docs:
             LOGGER.info(doc)

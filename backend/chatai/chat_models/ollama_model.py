@@ -78,7 +78,7 @@ class OllamaModel(BaseModel):
             yield token
 
     def _format_docs(self, docs):
-        return "\n\n".join(doc[0].page_content for doc in docs)
+        return "\n\n".join(doc.page_content for doc in docs)
     
     def chat_stream_rag(self, message, docs):
         chain = (
