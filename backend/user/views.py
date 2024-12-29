@@ -22,7 +22,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Session, Message
 from .serializers import MessageSerializer, UserSerializer
 from chatai.file_parser.parser_factory import ParserFactory
-from chatai.chat_models.vector_db import VectoreDatabase
+from chatai.chat_models.vector_db import VectoreDatabase, ElasticSearchVDB
 
 LOGGER = logging.getLogger(__name__)
 # 连接 Redis
@@ -238,7 +238,7 @@ class KnowledgeView(CreateModelMixin, DestroyModelMixin, ListModelMixin, Generic
     def _vectorize_doc(self, file_path, vector_path):
         parser = ParserFactory.get_parser(file_path)()
         docs = parser.parse(file_path)
-        VectoreDatabase.store(docs, str(vector_path))
+        ElasticSearchVDB.store(docs, str(vector_path))
 
     def create(self, request, *args, **kwargs):
         file = request.FILES.get('file')

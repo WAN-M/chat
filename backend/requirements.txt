@@ -13,3 +13,4 @@ langchain-chroma
 pypdf
 langchain-community
 django-environ
+langchain-elasticsearch

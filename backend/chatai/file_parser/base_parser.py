@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 class BaseParser(ABC):
-    def __init__(self, chunk_size=500, chunk_overlap=0):
+    def __init__(self, chunk_size=400, chunk_overlap=50):
         super().__init__()
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
