@@ -235,11 +235,6 @@ class UserView(RetrieveModelMixin, GenericViewSet):
 class KnowledgeView(CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet):
     parser_classes = (MultiPartParser, FormParser)  # 允许解析multipart/form-data
 
-    def _vectorize_doc(self, file_path, vector_path):
-        parser = ParserFactory.get_parser(file_path)()
-        docs = parser.parse(file_path)
-        ElasticSearchVDB.store(docs, str(vector_path))
-
     def create(self, request, *args, **kwargs):
         file = request.FILES.get('file')
         if not file:
@@ -262,7 +257,9 @@ class KnowledgeView(CreateModelMixin, DestroyModelMixin, ListModelMixin, Generic
             for chunk in file.chunks():
                 destination.write(chunk)
 
-        self._vectorize_doc(file_path, vector_path)
+        parser = ParserFactory.get_parser(file_path)()
+        docs = parser.parse(file_path)
+        ElasticSearchVDB.store(docs, request.user, file.name)
 
         return Response({'message': '文件上传成功'}, status=status.HTTP_200_OK)
     
@@ -270,12 +267,12 @@ class KnowledgeView(CreateModelMixin, DestroyModelMixin, ListModelMixin, Generic
         knowledge_name = kwargs.get('knowledge_name')
         dir = VectoreDatabase.get_db_dir(request.user)
         file_dir = dir / 'file'
-        vector_dir = dir / 'vector'
         rm_dir = file_dir / 'remove'
         if not os.path.exists(rm_dir):
             os.makedirs(rm_dir)
-        shutil.move(file_dir / knowledge_name, rm_dir / knowledge_name)
-        shutil.rmtree(vector_dir / knowledge_name.split('.')[0])
+        # shutil.move(file_dir / knowledge_name, rm_dir / knowledge_name)
+        LOGGER.info(f"Move {file_dir / knowledge_name} to {rm_dir / knowledge_name}")
+        ElasticSearchVDB.delete(request.user, knowledge_name)
         return Response({'message': '知识库删除成功'}, status=status.HTTP_200_OK)
     
     def list(self, request, *args, **kwargs):

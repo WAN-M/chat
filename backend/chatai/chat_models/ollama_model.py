@@ -66,7 +66,7 @@ rag_prompt = ChatPromptTemplate.from_template(RAG_MULITARY_TEMPLATE)
 class OllamaModel(BaseModel):
     def __init__(self) -> None:
         super().__init__()
-        self._llm = OllamaLLM(model='llama3.3')
+        self._llm = OllamaLLM(model='llama3.1:8b')
 
     def chat_response(self, message: str) -> str:
         res = self._llm.invoke(message)
