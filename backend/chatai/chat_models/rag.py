@@ -2,7 +2,8 @@ import logging
 import os
 
 from langchain_chroma import Chroma
-from langchain_elasticsearch import ElasticsearchStore
+from langchain_community.vectorstores.utils import DistanceStrategy
+from langchain_elasticsearch import ElasticsearchStore, ApproxRetrievalStrategy
 from langchain_ollama import OllamaEmbeddings
 
 LOGGER = logging.getLogger(__name__)
@@ -37,9 +38,9 @@ class ElasticSearchRAG(RAG):
             es_url="https://localhost:9200/",
             es_user='elastic',
             es_password='e4nkJk6FHIFUKfIukRhn',
-            es_params={'ca_certs': False, 'verify_certs': False}
-        )
+            es_params={'ca_certs': False, 'verify_certs': False},
+            distance_strategy=DistanceStrategy.DOT_PRODUCT,
+            strategy=ApproxRetrievalStrategy(hybrid=True, rrf=False)
+        ) # 混合检索，rrf重排
         all_documents = es.search(query, search_type="similarity")
-        LOGGER.error('test')
-        LOGGER.error(all_documents)
         return all_documents

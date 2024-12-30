@@ -25,6 +25,7 @@ const props = defineProps<{
             :type="message.role"
             :message="message.content"
             v-if="message.content"
+            style="border-radius: 7px;"
           ></markdown-message>
           <TextLoading v-if="!message.content"></TextLoading>
         </div>
